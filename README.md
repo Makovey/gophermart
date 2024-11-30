@@ -7,6 +7,9 @@
 5. `go run ./...`
 
 ---
+### Draft Sequence - https://miro.com/welcomeonboard/dGFsYVpRZ2xTTUEvUzNwb1NuVkdxS1dEYzZCRjMrQ09vWDQvQkxyNjQxdDRwdDNodzFIcVlHbU1DRzBWMXdKM3NuNGExUGlDY1gvVCtEUWxZMHdIbStmSXBhMlFSUjNxbXM3VDBmeFptYm03NG1vOTlhOHhFNnhWdjhNRzR0Q1ghZQ==?share_link_id=355065986122 
+
+---
 
 # Техническое задание
 
