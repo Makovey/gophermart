@@ -26,7 +26,7 @@ type Auth struct {
 
 type Claims struct {
 	jwt.RegisteredClaims
-	userID string
+	UserID string
 }
 
 func (a Auth) Authenticate(next http.Handler) http.Handler {
@@ -87,7 +87,7 @@ func (a Auth) parseUserID(tokenString string) (string, error) {
 		return "", errInvalidToken
 	}
 
-	return claims.userID, nil
+	return claims.UserID, nil
 }
 
 func responseWithError(w http.ResponseWriter, status int, message string) {

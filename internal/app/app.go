@@ -37,16 +37,15 @@ func (a App) initRouter() http.Handler {
 
 	})
 
-	r.Route("/api/user", func(r chi.Router) {
+	r.Group(func(r chi.Router) {
 		r.Use(middleware.NewAuth(a.deps.Logger()).Authenticate)
+		r.Get("/api/user/orders", func(w http.ResponseWriter, r *http.Request) {})
+		r.Post("/api/user/orders", func(w http.ResponseWriter, r *http.Request) {})
 
-		r.Get("/orders", func(w http.ResponseWriter, r *http.Request) {})
-		r.Post("/orders", func(w http.ResponseWriter, r *http.Request) {})
+		r.Get("/api/user/balance", func(w http.ResponseWriter, r *http.Request) {})
+		r.Post("/api/user/balance/withdraw", func(w http.ResponseWriter, r *http.Request) {})
 
-		r.Get("/balance", func(w http.ResponseWriter, r *http.Request) {})
-		r.Post("/balance/withdraw", func(w http.ResponseWriter, r *http.Request) {})
-
-		r.Get("/withdrawals", func(w http.ResponseWriter, r *http.Request) {})
+		r.Get("/api/user/withdrawals", func(w http.ResponseWriter, r *http.Request) {})
 	})
 
 	return r
