@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	
+	"github.com/go-playground/validator/v10"
 
 	"github.com/Makovey/gophermart/internal/repository"
 	"github.com/Makovey/gophermart/internal/service"
@@ -13,9 +15,10 @@ import (
 )
 
 const (
-	internalError     = "internal server error"
-	badRequestError   = "bad request"
-	userAlreadyExists = "user is already registered"
+	internalError          = "internal server error"
+	badRequestError        = "bad request"
+	userAlreadyExists      = "user is already registered"
+	loginOrPasswordIsEmpty = "login or password is empty, or greater than 30 symbols"
 )
 
 func (h handler) Register(w http.ResponseWriter, r *http.Request) {
@@ -33,6 +36,13 @@ func (h handler) Register(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		h.log.Error(fmt.Sprintf("%s: can't unmarshal request body", fn), "error", err.Error())
 		h.writeResponseWithError(w, http.StatusInternalServerError, internalError)
+		return
+	}
+
+	validate := validator.New()
+	if err = validate.Struct(reqModel); err != nil {
+		h.log.Error(fmt.Sprintf("%s: login or password is empty or greater than 30 symbols", fn), "error", err.Error())
+		h.writeResponseWithError(w, http.StatusBadRequest, loginOrPasswordIsEmpty)
 		return
 	}
 

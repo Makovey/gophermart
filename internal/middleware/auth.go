@@ -70,7 +70,7 @@ func (a Auth) parseUserID(tokenString string) (string, error) {
 			return nil, errSigningMethod
 		}
 
-		return []byte(os.Getenv("secretKey")), nil // TODO: change open secret key
+		return []byte(os.Getenv("gophermart_key")), nil
 	})
 
 	if err != nil {

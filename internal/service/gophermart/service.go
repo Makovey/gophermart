@@ -46,6 +46,9 @@ func (s serv) RegisterUser(ctx context.Context, request model.AuthRequest) (stri
 	}
 
 	jwtToken, err := s.buildNewJWT(user.UserID)
+	if err != nil {
+		return "", err
+	}
 
 	return jwtToken, nil
 }
@@ -60,7 +63,7 @@ func (s serv) buildNewJWT(userID string) (string, error) {
 		UserID: userID,
 	})
 
-	tokenString, err := token.SignedString([]byte("secretKey"))
+	tokenString, err := token.SignedString([]byte("gophermart_key"))
 	if err != nil {
 		s.logger.Warn(fmt.Sprintf("%s: can't sign token", fn), "error", err.Error())
 		return "", err
