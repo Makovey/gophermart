@@ -9,19 +9,12 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/Makovey/gophermart/internal/logger"
 	"github.com/Makovey/gophermart/internal/logger/dummy"
 	"github.com/Makovey/gophermart/internal/repository/mocks"
-	"github.com/Makovey/gophermart/internal/service"
 	"github.com/Makovey/gophermart/internal/transport/http/model"
 )
 
 func TestGeneratePasswordHash(t *testing.T) {
-	type deps struct {
-		repo   service.GophermartRepository
-		logger logger.Logger
-	}
-
 	type params struct {
 		authModel model.AuthRequest
 	}
@@ -33,25 +26,21 @@ func TestGeneratePasswordHash(t *testing.T) {
 
 	tests := []struct {
 		name    string
-		deps    deps
 		param   params
 		expects expects
 	}{
 		{
 			name:    "Successful generate new authorization token",
-			deps:    deps{logger: dummy.NewDummyLogger()},
 			param:   params{authModel: model.AuthRequest{Login: "testableLogin", Password: "testablePassword"}},
 			expects: expects{expectRepoCall: true},
 		},
 		{
 			name:    "Failed generate new authorization token with repo error",
-			deps:    deps{logger: dummy.NewDummyLogger()},
 			param:   params{authModel: model.AuthRequest{Login: "testableLogin", Password: "testablePassword"}},
 			expects: expects{expectRepoCall: true, repoError: errors.New("repoError")},
 		},
 		{
 			name:    "Failed generate new authorization token with long password",
-			deps:    deps{logger: dummy.NewDummyLogger()},
 			param:   params{authModel: model.AuthRequest{Login: "testableLogin", Password: strings.Repeat("Password", 10)}},
 			expects: expects{},
 		},
@@ -67,7 +56,7 @@ func TestGeneratePasswordHash(t *testing.T) {
 				mock.EXPECT().RegisterNewUser(gomock.Any(), gomock.Any()).Return(tt.expects.repoError)
 			}
 
-			serv := NewGophermartService(mock, tt.deps.logger)
+			serv := NewGophermartService(mock, dummy.NewDummyLogger())
 			token, err := serv.RegisterUser(context.Background(), tt.param.authModel)
 
 			if err != nil {
