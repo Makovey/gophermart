@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"github.com/Makovey/gophermart/internal/middleware/utils"
 	"net/http"
 	"os"
 	"os/signal"
@@ -38,7 +39,9 @@ func (a App) initRouter() http.Handler {
 	})
 
 	r.Group(func(r chi.Router) {
-		r.Use(middleware.NewAuth(a.deps.Logger()).Authenticate)
+		authMiddleware := middleware.NewAuth(utils.NewJWTUtils(a.deps.Logger()), a.deps.Logger())
+
+		r.Use(authMiddleware.Authenticate)
 		r.Get("/api/user/orders", func(w http.ResponseWriter, r *http.Request) {})
 		r.Post("/api/user/orders", func(w http.ResponseWriter, r *http.Request) {})
 

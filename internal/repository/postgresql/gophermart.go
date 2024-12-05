@@ -2,10 +2,10 @@ package postgresql
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"strings"
-
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 
 	"github.com/Makovey/gophermart/internal/config"
 	"github.com/Makovey/gophermart/internal/logger"
@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	insertNewUser = "insertNewUser"
+	errUniqueViolatesCode = "23505"
 )
 
 type repo struct {
@@ -26,18 +26,17 @@ type repo struct {
 func (r *repo) RegisterNewUser(ctx context.Context, user model.RegisterUser) error {
 	fn := "postgresql.RegisterNewUser"
 
-	_, err := r.conn.Prepare(ctx, insertNewUser, `
-		INSERT INTO gophermart_users (user_id, login, password_hash) VALUES ($1, $2, $3)
-    `)
-	if err != nil {
-		r.log.Error(fmt.Sprintf("%s: failed to prepare new user", fn), "error", err)
-		return repository.ErrPrepareStmt
-	}
-
-	_, err = r.conn.Exec(ctx, insertNewUser, user.UserID, user.Login, user.PasswordHash)
+	_, err := r.conn.Exec(
+		ctx,
+		`INSERT INTO gophermart_users (user_id, login, password_hash) VALUES ($1, $2, $3)`,
+		user.UserID,
+		user.Login,
+		user.PasswordHash,
+	)
 	if err != nil {
 		r.log.Error(fmt.Sprintf("%s: failed to execute new user", fn), "error", err)
-		if strings.Contains(err.Error(), "duplicate key value violates unique constraint") {
+		var pgErr *pgconn.PgError
+		if ok := errors.As(err, &pgErr); ok && pgErr.Code == errUniqueViolatesCode {
 			return repository.ErrLoginIsAlreadyExist
 		}
 

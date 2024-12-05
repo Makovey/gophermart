@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	
+
 	"github.com/go-playground/validator/v10"
 
 	"github.com/Makovey/gophermart/internal/repository"
@@ -53,8 +53,7 @@ func (h handler) Register(w http.ResponseWriter, r *http.Request) {
 			h.writeResponseWithError(w, http.StatusConflict, userAlreadyExists)
 			return
 		case errors.Is(err, service.ErrGeneratePass),
-			errors.Is(err, repository.ErrPrepareStmt),
-			errors.Is(err, repository.ErrPrepareStmt):
+			errors.Is(err, repository.ErrExecStmt):
 			h.writeResponseWithError(w, http.StatusInternalServerError, internalError)
 			return
 		}

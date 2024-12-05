@@ -3,6 +3,7 @@ package gophermart
 import (
 	"context"
 	"fmt"
+	"github.com/Makovey/gophermart/internal/middleware/utils"
 	"golang.org/x/crypto/bcrypt"
 	"time"
 
@@ -10,7 +11,6 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/Makovey/gophermart/internal/logger"
-	"github.com/Makovey/gophermart/internal/middleware"
 	repoModel "github.com/Makovey/gophermart/internal/repository/model"
 	"github.com/Makovey/gophermart/internal/service"
 	"github.com/Makovey/gophermart/internal/transport"
@@ -56,7 +56,7 @@ func (s serv) RegisterUser(ctx context.Context, request model.AuthRequest) (stri
 func (s serv) buildNewJWT(userID string) (string, error) {
 	fn := "gophermart.buildNewJWT:"
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, middleware.Claims{
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, utils.Claims{
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(tokenExp)),
 		},
