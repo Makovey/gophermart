@@ -1,9 +1,17 @@
-version: '3'
+version: '3.8'
 
 volumes:
   postgres_volumes:
 
 services:
+  gophermart:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - DATABASE_URI=postgres://${PG_USER}:${PG_PASSWORD}@localhost:{PG_PORT}/${PG_DATABASE_NAME}
   pg:
     image: postgres:14-alpine3.17
     environment:
