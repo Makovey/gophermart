@@ -1,6 +1,7 @@
 package app
 
 import (
+	"github.com/Makovey/gophermart/pkg/jwt"
 	"io"
 
 	"github.com/Makovey/gophermart/internal/config"
@@ -16,6 +17,7 @@ import (
 type deps struct {
 	logger logger.Logger
 	cfg    config.Config
+	jwt    *jwt.JWT
 
 	handler transport.HTTPHandler
 	service transport.GophermartService
@@ -36,7 +38,7 @@ func (p *deps) Logger() logger.Logger {
 
 func (p *deps) Service() transport.GophermartService {
 	if p.service == nil {
-		p.service = gophermart.NewGophermartService(p.Repository(), p.Logger())
+		p.service = gophermart.NewGophermartService(p.Repository(), p.Logger(), p.JWT())
 	}
 
 	return p.service
@@ -64,6 +66,14 @@ func (p *deps) Config() config.Config {
 	}
 
 	return p.cfg
+}
+
+func (p *deps) JWT() *jwt.JWT {
+	if p.jwt == nil {
+		p.jwt = jwt.NewJWT(p.Logger())
+	}
+
+	return p.jwt
 }
 
 func (p *deps) CloseAll() error {

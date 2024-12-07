@@ -1,11 +1,18 @@
-package utils
+package jwt
 
 import (
 	"errors"
 	"fmt"
-	"github.com/Makovey/gophermart/internal/logger"
-	"github.com/golang-jwt/jwt/v5"
 	"os"
+	"time"
+
+	"github.com/golang-jwt/jwt/v5"
+
+	"github.com/Makovey/gophermart/internal/logger"
+)
+
+const (
+	tokenExp = time.Hour * 24
 )
 
 var (
@@ -15,12 +22,12 @@ var (
 	ErrTokenExpired  = errors.New("token is expired")
 )
 
-type JWTUtils struct {
+type JWT struct {
 	log logger.Logger
 }
 
-func NewJWTUtils(logger logger.Logger) JWTUtils {
-	return JWTUtils{log: logger}
+func NewJWT(logger logger.Logger) *JWT {
+	return &JWT{log: logger}
 }
 
 type Claims struct {
@@ -28,8 +35,8 @@ type Claims struct {
 	UserID string
 }
 
-func (j JWTUtils) ParseUserID(tokenString string) (string, error) {
-	fn := "utils.jwt.parseToken"
+func (j JWT) ParseUserID(tokenString string) (string, error) {
+	fn := "jwt.ParseToken"
 
 	var claims Claims
 	token, err := jwt.ParseWithClaims(tokenString, &claims, func(token *jwt.Token) (interface{}, error) {
@@ -56,4 +63,23 @@ func (j JWTUtils) ParseUserID(tokenString string) (string, error) {
 	}
 
 	return claims.UserID, nil
+}
+
+func (j JWT) BuildNewJWT(userID string) (string, error) {
+	fn := "jwt.BuildNewJWT:"
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, Claims{
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(tokenExp)),
+		},
+		UserID: userID,
+	})
+
+	tokenString, err := token.SignedString([]byte("gophermart_key"))
+	if err != nil {
+		j.log.Warn(fmt.Sprintf("%s: can't sign token", fn), "error", err.Error())
+		return "", err
+	}
+
+	return tokenString, nil
 }

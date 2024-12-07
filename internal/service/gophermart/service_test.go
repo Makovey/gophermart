@@ -3,6 +3,7 @@ package gophermart
 import (
 	"context"
 	"errors"
+	"github.com/Makovey/gophermart/pkg/jwt"
 	"strings"
 	"testing"
 
@@ -56,8 +57,8 @@ func TestGeneratePasswordHash(t *testing.T) {
 				mock.EXPECT().RegisterNewUser(gomock.Any(), gomock.Any()).Return(tt.expects.repoError)
 			}
 
-			serv := NewGophermartService(mock, dummy.NewDummyLogger())
-			token, err := serv.RegisterUser(context.Background(), tt.param.authModel)
+			serv := NewGophermartService(mock, dummy.NewDummyLogger(), jwt.NewJWT(dummy.NewDummyLogger()))
+			token, err := serv.RegisterNewUser(context.Background(), tt.param.authModel)
 
 			if err != nil {
 				assert.Error(t, err)

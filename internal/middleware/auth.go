@@ -8,16 +8,16 @@ import (
 	"net/http"
 
 	"github.com/Makovey/gophermart/internal/logger"
-	"github.com/Makovey/gophermart/internal/middleware/utils"
+	"github.com/Makovey/gophermart/pkg/jwt"
 )
 
 type Auth struct {
-	jwtUtils utils.JWTUtils
-	log      logger.Logger
+	jwt *jwt.JWT
+	log logger.Logger
 }
 
-func NewAuth(utils utils.JWTUtils, log logger.Logger) Auth {
-	return Auth{jwtUtils: utils, log: log}
+func NewAuth(jwt *jwt.JWT, log logger.Logger) Auth {
+	return Auth{jwt: jwt, log: log}
 }
 
 func (a Auth) Authenticate(next http.Handler) http.Handler {
@@ -31,15 +31,15 @@ func (a Auth) Authenticate(next http.Handler) http.Handler {
 			return
 		}
 
-		userID, err := a.jwtUtils.ParseUserID(authHeader)
+		userID, err := a.jwt.ParseUserID(authHeader)
 		if err != nil {
 			switch {
-			case errors.Is(err, utils.ErrParseToken):
+			case errors.Is(err, jwt.ErrParseToken):
 				a.log.Info(fmt.Sprintf("%s: failed to parse token", fn), "token", authHeader)
 				responseWithError(w, http.StatusInternalServerError, "internal server error, please try again")
-			case errors.Is(err, utils.ErrSigningMethod),
-				errors.Is(err, utils.ErrInvalidToken),
-				errors.Is(err, utils.ErrTokenExpired):
+			case errors.Is(err, jwt.ErrSigningMethod),
+				errors.Is(err, jwt.ErrInvalidToken),
+				errors.Is(err, jwt.ErrTokenExpired):
 				a.log.Info(fmt.Sprintf("%s: token is invalid", fn), "token", authHeader)
 				responseWithError(w, http.StatusUnauthorized, "please, relogin again, to get access to this resource")
 				return

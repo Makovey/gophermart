@@ -3,30 +3,24 @@ package gophermart
 import (
 	"context"
 	"fmt"
-	"github.com/Makovey/gophermart/internal/middleware/utils"
-	"golang.org/x/crypto/bcrypt"
-	"time"
-
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
+	"golang.org/x/crypto/bcrypt"
 
 	"github.com/Makovey/gophermart/internal/logger"
 	repoModel "github.com/Makovey/gophermart/internal/repository/model"
 	"github.com/Makovey/gophermart/internal/service"
 	"github.com/Makovey/gophermart/internal/transport"
 	"github.com/Makovey/gophermart/internal/transport/http/model"
-)
-
-const (
-	tokenExp = time.Hour * 24
+	"github.com/Makovey/gophermart/pkg/jwt"
 )
 
 type serv struct {
 	repo   service.GophermartRepository
 	logger logger.Logger
+	jwt    *jwt.JWT
 }
 
-func (s serv) RegisterUser(ctx context.Context, request model.AuthRequest) (string, error) {
+func (s serv) RegisterNewUser(ctx context.Context, request model.AuthRequest) (string, error) {
 	fn := "gophermart.RegisterUser"
 
 	pass, err := bcrypt.GenerateFromPassword([]byte(request.Password), bcrypt.DefaultCost)
@@ -45,7 +39,7 @@ func (s serv) RegisterUser(ctx context.Context, request model.AuthRequest) (stri
 		return "", err
 	}
 
-	jwtToken, err := s.buildNewJWT(user.UserID)
+	jwtToken, err := s.jwt.BuildNewJWT(user.UserID)
 	if err != nil {
 		return "", err
 	}
@@ -53,28 +47,10 @@ func (s serv) RegisterUser(ctx context.Context, request model.AuthRequest) (stri
 	return jwtToken, nil
 }
 
-func (s serv) buildNewJWT(userID string) (string, error) {
-	fn := "gophermart.buildNewJWT:"
-
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, utils.Claims{
-		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(tokenExp)),
-		},
-		UserID: userID,
-	})
-
-	tokenString, err := token.SignedString([]byte("gophermart_key"))
-	if err != nil {
-		s.logger.Warn(fmt.Sprintf("%s: can't sign token", fn), "error", err.Error())
-		return "", err
-	}
-
-	return tokenString, nil
-}
-
 func NewGophermartService(
 	repo service.GophermartRepository,
 	logger logger.Logger,
+	jwt *jwt.JWT,
 ) transport.GophermartService {
-	return &serv{repo, logger}
+	return &serv{repo: repo, logger: logger, jwt: jwt}
 }

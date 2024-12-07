@@ -8,5 +8,5 @@ import (
 
 //go:generate mockgen -source=service.go -destination=../service/mocks/service_mock.go -package=mocks
 type GophermartService interface {
-	RegisterUser(ctx context.Context, request model.AuthRequest) (string, error)
+	RegisterNewUser(ctx context.Context, request model.AuthRequest) (string, error)
 }
