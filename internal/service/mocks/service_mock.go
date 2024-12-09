@@ -35,17 +35,32 @@ func (m *MockGophermartService) EXPECT() *MockGophermartServiceMockRecorder {
 	return m.recorder
 }
 
-// RegisterUser mocks base method.
-func (m *MockGophermartService) RegisterUser(ctx context.Context, request model.AuthRequest) (string, error) {
+// LoginUser mocks base method.
+func (m *MockGophermartService) LoginUser(ctx context.Context, request model.AuthRequest) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RegisterUser", ctx, request)
+	ret := m.ctrl.Call(m, "LoginUser", ctx, request)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// RegisterUser indicates an expected call of RegisterUser.
-func (mr *MockGophermartServiceMockRecorder) RegisterUser(ctx, request interface{}) *gomock.Call {
+// LoginUser indicates an expected call of LoginUser.
+func (mr *MockGophermartServiceMockRecorder) LoginUser(ctx, request interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterUser", reflect.TypeOf((*MockGophermartService)(nil).RegisterUser), ctx, request)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LoginUser", reflect.TypeOf((*MockGophermartService)(nil).LoginUser), ctx, request)
+}
+
+// RegisterNewUser mocks base method.
+func (m *MockGophermartService) RegisterNewUser(ctx context.Context, request model.AuthRequest) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RegisterNewUser", ctx, request)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// RegisterNewUser indicates an expected call of RegisterNewUser.
+func (mr *MockGophermartServiceMockRecorder) RegisterNewUser(ctx, request interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterNewUser", reflect.TypeOf((*MockGophermartService)(nil).RegisterNewUser), ctx, request)
 }

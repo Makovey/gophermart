@@ -33,9 +33,7 @@ func (a App) initRouter() http.Handler {
 	r.Use(middleware.NewCompressor().Compress)
 
 	r.Post("/api/user/register", a.deps.Handler().Register)
-	r.Post("/api/user/login", func(w http.ResponseWriter, r *http.Request) {
-
-	})
+	r.Post("/api/user/login", a.deps.Handler().Login)
 
 	r.Group(func(r chi.Router) {
 		authMiddleware := middleware.NewAuth(a.deps.JWT(), a.deps.Logger())

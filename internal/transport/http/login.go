@@ -13,14 +13,8 @@ import (
 	"github.com/Makovey/gophermart/internal/transport/http/model"
 )
 
-const (
-	internalError          = "internal server error"
-	badRequestError        = "bad request"
-	loginOrPasswordIsEmpty = "login or password is empty, or greater than 30 symbols"
-)
-
-func (h handler) Register(w http.ResponseWriter, r *http.Request) {
-	fn := "http.Register"
+func (h handler) Login(w http.ResponseWriter, r *http.Request) {
+	fn := "http.Login"
 
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -32,27 +26,28 @@ func (h handler) Register(w http.ResponseWriter, r *http.Request) {
 	var reqModel model.AuthRequest
 	err = json.Unmarshal(body, &reqModel)
 	if err != nil {
-		h.log.Error(fmt.Sprintf("%s: can't unmarshal request body", fn), "error", err.Error())
+		h.log.Warn(fmt.Sprintf("%s: can't unmarshal request body", fn), "error", err.Error())
 		h.writeResponseWithError(w, http.StatusInternalServerError, internalError)
 		return
 	}
 
 	validate := validator.New()
 	if err = validate.Struct(reqModel); err != nil {
-		h.log.Error(fmt.Sprintf("%s: login or password is empty or greater than 30 symbols", fn), "error", err.Error())
+		h.log.Info(fmt.Sprintf("%s: login or password is empty or greater than 30 symbols", fn), "error", err.Error())
 		h.writeResponseWithError(w, http.StatusBadRequest, loginOrPasswordIsEmpty)
 		return
 	}
 
-	token, err := h.service.RegisterNewUser(r.Context(), reqModel)
+	token, err := h.service.LoginUser(r.Context(), reqModel)
 	if err != nil {
 		switch {
-		case errors.Is(err, service.ErrLoginIsAlreadyExist):
-			h.writeResponseWithError(w, http.StatusConflict, "user is already registered")
-			return
-		case errors.Is(err, service.ErrGeneratePass),
-			errors.Is(err, service.ErrExecStmt):
+		case errors.Is(err, service.ErrExecStmt):
 			h.writeResponseWithError(w, http.StatusInternalServerError, internalError)
+			return
+		case errors.Is(err, service.ErrNotFound),
+			errors.Is(err, service.ErrPasswordDoesntMatch):
+			h.log.Info(fmt.Sprintf("%s: user can't login with login: %s", fn, reqModel.Login), "error", err.Error())
+			h.writeResponseWithError(w, http.StatusUnauthorized, "login or password is incorrect")
 			return
 		}
 	}

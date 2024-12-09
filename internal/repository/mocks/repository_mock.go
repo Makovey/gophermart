@@ -35,6 +35,21 @@ func (m *MockGophermartRepository) EXPECT() *MockGophermartRepositoryMockRecorde
 	return m.recorder
 }
 
+// LoginUser mocks base method.
+func (m *MockGophermartRepository) LoginUser(ctx context.Context, login string) (model.RegisterUser, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "LoginUser", ctx, login)
+	ret0, _ := ret[0].(model.RegisterUser)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// LoginUser indicates an expected call of LoginUser.
+func (mr *MockGophermartRepositoryMockRecorder) LoginUser(ctx, login interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LoginUser", reflect.TypeOf((*MockGophermartRepository)(nil).LoginUser), ctx, login)
+}
+
 // RegisterNewUser mocks base method.
 func (m *MockGophermartRepository) RegisterNewUser(ctx context.Context, user model.RegisterUser) error {
 	m.ctrl.T.Helper()

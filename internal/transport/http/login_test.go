@@ -17,7 +17,7 @@ import (
 	"github.com/Makovey/gophermart/internal/service/mocks"
 )
 
-func TestRegisterHandler(t *testing.T) {
+func TestLoginHandler(t *testing.T) {
 	type want struct {
 		code          int
 		hasAuthHeader bool
@@ -39,7 +39,7 @@ func TestRegisterHandler(t *testing.T) {
 		params  params
 	}{
 		{
-			name: "successful register",
+			name: "success login",
 			want: want{
 				code: http.StatusOK,
 			},
@@ -55,7 +55,7 @@ func TestRegisterHandler(t *testing.T) {
 			},
 		},
 		{
-			name: "error register: with body reader",
+			name: "error login: with body reader",
 			want: want{
 				code: http.StatusBadRequest,
 			},
@@ -68,7 +68,7 @@ func TestRegisterHandler(t *testing.T) {
 			},
 		},
 		{
-			name: "error register: with empty body",
+			name: "error login: with empty body",
 			want: want{
 				code: http.StatusBadRequest,
 			},
@@ -81,7 +81,7 @@ func TestRegisterHandler(t *testing.T) {
 			},
 		},
 		{
-			name: "error register: with long login or password",
+			name: "error login: with long login or password",
 			want: want{
 				code: http.StatusBadRequest,
 			},
@@ -97,13 +97,13 @@ func TestRegisterHandler(t *testing.T) {
 			},
 		},
 		{
-			name: "error register: login already exists",
+			name: "error register: user not found",
 			want: want{
-				code: http.StatusConflict,
+				code: http.StatusUnauthorized,
 			},
 			expects: expects{
 				expectServiceCall: true,
-				serviceError:      service.ErrLoginIsAlreadyExist,
+				serviceError:      service.ErrNotFound,
 			},
 			params: params{
 				body: strings.NewReader(makeJSON(map[string]any{
@@ -113,13 +113,29 @@ func TestRegisterHandler(t *testing.T) {
 			},
 		},
 		{
-			name: "error register: service error",
+			name: "error register: password does not match",
+			want: want{
+				code: http.StatusUnauthorized,
+			},
+			expects: expects{
+				expectServiceCall: true,
+				serviceError:      service.ErrPasswordDoesntMatch,
+			},
+			params: params{
+				body: strings.NewReader(makeJSON(map[string]any{
+					"login":    "testLogin",
+					"password": "testPassword",
+				})),
+			},
+		},
+		{
+			name: "error login: service error",
 			want: want{
 				code: http.StatusInternalServerError,
 			},
 			expects: expects{
 				expectServiceCall: true,
-				serviceError:      service.ErrGeneratePass,
+				serviceError:      service.ErrExecStmt,
 			},
 			params: params{
 				body: strings.NewReader(makeJSON(map[string]any{
@@ -136,7 +152,7 @@ func TestRegisterHandler(t *testing.T) {
 
 			serv := mocks.NewMockGophermartService(ctrl)
 			if tt.expects.expectServiceCall {
-				serv.EXPECT().RegisterNewUser(gomock.Any(), gomock.Any()).Return(uuid.NewString(), tt.expects.serviceError)
+				serv.EXPECT().LoginUser(gomock.Any(), gomock.Any()).Return(uuid.NewString(), tt.expects.serviceError)
 			}
 
 			h := NewHTTPHandler(
@@ -145,9 +161,9 @@ func TestRegisterHandler(t *testing.T) {
 			)
 
 			w := httptest.NewRecorder()
-			r := httptest.NewRequest(http.MethodPost, "/api/user/register", tt.params.body)
+			r := httptest.NewRequest(http.MethodPost, "/api/user/login", tt.params.body)
 
-			h.Register(w, r)
+			h.Login(w, r)
 
 			res := w.Result()
 			defer res.Body.Close()
