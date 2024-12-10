@@ -2,17 +2,24 @@ package gophermart
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"golang.org/x/crypto/bcrypt"
+	"strconv"
 
 	"github.com/google/uuid"
 
 	"github.com/Makovey/gophermart/internal/logger"
 	repoModel "github.com/Makovey/gophermart/internal/repository/model"
 	"github.com/Makovey/gophermart/internal/service"
+	"github.com/Makovey/gophermart/internal/service/luhn"
 	"github.com/Makovey/gophermart/internal/transport"
 	"github.com/Makovey/gophermart/internal/transport/http/model"
 	"github.com/Makovey/gophermart/pkg/jwt"
+)
+
+var (
+	UserIDLength = 10
 )
 
 type serv struct {
@@ -39,7 +46,7 @@ func (s serv) RegisterNewUser(ctx context.Context, request model.AuthRequest) (s
 	}
 
 	user := repoModel.RegisterUser{
-		UserID:       uuid.NewString()[:8],
+		UserID:       uuid.NewString()[:UserIDLength],
 		Login:        request.Login,
 		PasswordHash: string(pass),
 	}
@@ -73,4 +80,31 @@ func (s serv) LoginUser(ctx context.Context, request model.AuthRequest) (string,
 	}
 
 	return jwtToken, nil
+}
+
+func (s serv) ValidateOrderID(orderID string) bool {
+	orderInt, err := strconv.Atoi(orderID)
+	if err != nil {
+		return false
+	}
+
+	return luhn.IsValid(orderInt)
+}
+
+func (s serv) ProcessNewOrder(ctx context.Context, userID, orderID string) error {
+	order, err := s.repo.GetOrderByID(ctx, orderID)
+	if err != nil {
+		switch {
+		case errors.Is(err, service.ErrNotFound):
+			return s.repo.PostNewOrder(ctx, orderID, userID)
+		default:
+			return err
+		}
+	}
+
+	if order.OwnerUserID != userID {
+		return service.ErrOrderConflict
+	}
+
+	return service.ErrOrderAlreadyPosted
 }

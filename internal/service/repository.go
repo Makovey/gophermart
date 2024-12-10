@@ -10,4 +10,7 @@ import (
 type GophermartRepository interface {
 	RegisterNewUser(ctx context.Context, user model.RegisterUser) error
 	LoginUser(ctx context.Context, login string) (model.RegisterUser, error)
+
+	GetOrderByID(ctx context.Context, orderID string) (model.Order, error)
+	PostNewOrder(ctx context.Context, orderID, userID string) error
 }

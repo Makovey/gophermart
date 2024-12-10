@@ -75,7 +75,7 @@ func (j JWT) BuildNewJWT(userID string) (string, error) {
 		UserID: userID,
 	})
 
-	tokenString, err := token.SignedString([]byte("gophermart_key"))
+	tokenString, err := token.SignedString([]byte(os.Getenv("gophermart_key")))
 	if err != nil {
 		j.log.Warn(fmt.Sprintf("%s: can't sign token", fn), "error", err.Error())
 		return "", err

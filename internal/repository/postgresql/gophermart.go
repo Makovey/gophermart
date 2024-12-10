@@ -52,7 +52,6 @@ func (r *repo) RegisterNewUser(ctx context.Context, user model.RegisterUser) err
 		return service.ErrExecStmt
 	}
 
-	r.log.Info(fmt.Sprintf("%s: inserted new user with login", fn), "login", user.Login)
 	return nil
 }
 
@@ -79,6 +78,46 @@ func (r *repo) LoginUser(ctx context.Context, login string) (model.RegisterUser,
 	}
 
 	return user, nil
+}
+
+func (r *repo) GetOrderByID(ctx context.Context, orderID string) (model.Order, error) {
+	fn := "postgresql.GetOrderByID"
+
+	row := r.conn.QueryRow(
+		ctx,
+		`SELECT order_id, owner_user_id, status, accrual FROM gophermart_orders WHERE order_id = $1`,
+		orderID,
+	)
+	var order model.Order
+	err := row.Scan(&order.OrderID, &order.OwnerUserID, &order.Status, &order.Accrual)
+	if err != nil {
+		switch {
+		case errors.Is(err, pgx.ErrNoRows):
+			r.log.Info(fmt.Sprintf("%s: user with order %s not found", fn, orderID))
+			return model.Order{}, service.ErrNotFound
+		default:
+			r.log.Error(fmt.Sprintf("%s: failed to query user", fn), "error", err)
+			return model.Order{}, service.ErrExecStmt
+		}
+	}
+	return order, nil
+}
+
+func (r *repo) PostNewOrder(ctx context.Context, orderID, userID string) error {
+	fn := "postgresql.PostNewOrder"
+
+	_, err := r.conn.Exec(
+		ctx,
+		`INSERT INTO gophermart_orders (order_id, owner_user_id, status) VALUES ($1, $2, 'NEW')`,
+		orderID,
+		userID,
+	)
+	if err != nil {
+		r.log.Error(fmt.Sprintf("%s: failed to post new order", fn), "error", err)
+		return service.ErrExecStmt
+	}
+
+	return nil
 }
 
 func (r *repo) Close() error {

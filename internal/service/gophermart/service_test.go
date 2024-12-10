@@ -3,7 +3,6 @@ package gophermart
 import (
 	"context"
 	"errors"
-	"github.com/Makovey/gophermart/pkg/jwt"
 	"golang.org/x/crypto/bcrypt"
 	"strings"
 	"testing"
@@ -14,7 +13,9 @@ import (
 	"github.com/Makovey/gophermart/internal/logger/dummy"
 	"github.com/Makovey/gophermart/internal/repository/mocks"
 	repoModel "github.com/Makovey/gophermart/internal/repository/model"
+	"github.com/Makovey/gophermart/internal/service"
 	"github.com/Makovey/gophermart/internal/transport/http/model"
+	"github.com/Makovey/gophermart/pkg/jwt"
 )
 
 func TestGeneratePasswordHash(t *testing.T) {
@@ -33,17 +34,17 @@ func TestGeneratePasswordHash(t *testing.T) {
 		expects expects
 	}{
 		{
-			name:    "Successful generate new authorization token",
+			name:    "successful generate new authorization token",
 			param:   params{authModel: model.AuthRequest{Login: "testableLogin", Password: "testablePassword"}},
 			expects: expects{expectRepoCall: true},
 		},
 		{
-			name:    "Failed generate new authorization token with repo error",
+			name:    "failed generate new authorization token with repo error",
 			param:   params{authModel: model.AuthRequest{Login: "testableLogin", Password: "testablePassword"}},
 			expects: expects{expectRepoCall: true, repoError: errors.New("repoError")},
 		},
 		{
-			name:    "Failed generate new authorization token with long password",
+			name:    "failed generate new authorization token with long password",
 			param:   params{authModel: model.AuthRequest{Login: "testableLogin", Password: strings.Repeat("Password", 10)}},
 			expects: expects{},
 		},
@@ -90,17 +91,17 @@ func TestLoginUser(t *testing.T) {
 		expects expects
 	}{
 		{
-			name:    "Successful generate new authorization token",
+			name:    "successful generate new authorization token",
 			param:   params{authModel: model.AuthRequest{Login: "testableLogin", Password: "testablePassword"}},
 			expects: expects{repoCall: true, repoAnswer: repoModel.RegisterUser{UserID: "id", Login: "testableLogin", PasswordHash: "testablePassword"}},
 		},
 		{
-			name:    "Failed login: repo error",
+			name:    "failed login: repo error",
 			param:   params{authModel: model.AuthRequest{Login: "testableLogin", Password: "testablePassword"}},
 			expects: expects{repoCall: true, repoError: errors.New("repoError")},
 		},
 		{
-			name:    "Failed  login: password does not match",
+			name:    "failed  login: password does not match",
 			param:   params{authModel: model.AuthRequest{Login: "testableLogin", Password: "newPassword"}},
 			expects: expects{repoCall: true},
 		},
@@ -128,6 +129,131 @@ func TestLoginUser(t *testing.T) {
 			} else {
 				assert.NoError(t, err)
 				assert.NotEmpty(t, token)
+			}
+		})
+	}
+}
+
+func TestValidateOrderID(t *testing.T) {
+	type params struct {
+		orderID string
+	}
+
+	type expects struct {
+		expectedValid bool
+	}
+
+	tests := []struct {
+		name    string
+		expects expects
+		params  params
+	}{
+		{
+			name:    "successful validate order id",
+			expects: expects{expectedValid: true},
+			params:  params{orderID: "12345678903"},
+		},
+		{
+			name:    "error validate with zero",
+			expects: expects{expectedValid: false},
+			params:  params{orderID: "0"},
+		},
+		{
+			name:    "error validate with negative number",
+			expects: expects{expectedValid: false},
+			params:  params{orderID: "-12345678903"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			mock := mocks.NewMockGophermartRepository(ctrl)
+
+			serv := NewGophermartService(mock, dummy.NewDummyLogger(), jwt.NewJWT(dummy.NewDummyLogger()))
+			isValid := serv.ValidateOrderID(tt.params.orderID)
+
+			if tt.expects.expectedValid {
+				assert.True(t, isValid)
+			} else {
+				assert.False(t, isValid)
+			}
+		})
+	}
+}
+
+func TestProcessNewOrder(t *testing.T) {
+	type want struct {
+		finalErr error
+	}
+
+	type params struct {
+		userID  string
+		orderID string
+	}
+
+	type expects struct {
+		getCall     bool
+		getError    error
+		getCallAns  repoModel.Order
+		postNewCall bool
+		postError   error
+	}
+
+	tests := []struct {
+		name    string
+		want    want
+		param   params
+		expects expects
+	}{
+		{
+			name:    "process order: posted new order",
+			want:    want{finalErr: nil},
+			param:   params{userID: "12345", orderID: "1"},
+			expects: expects{getCall: true, getError: service.ErrNotFound, postNewCall: true, postError: nil},
+		},
+		{
+			name:    "process order: posted new order with error",
+			want:    want{finalErr: service.ErrExecStmt},
+			param:   params{userID: "12345", orderID: "1"},
+			expects: expects{getCall: true, getError: service.ErrNotFound, postNewCall: true, postError: service.ErrExecStmt},
+		},
+		{
+			name:    "process error: order already posted by another user",
+			want:    want{finalErr: service.ErrOrderConflict},
+			param:   params{userID: "12345", orderID: "1"},
+			expects: expects{getCall: true, getCallAns: repoModel.Order{OwnerUserID: "1"}},
+		},
+		{
+			name:    "process order: already posted by user",
+			want:    want{finalErr: service.ErrOrderAlreadyPosted},
+			param:   params{userID: "12345", orderID: "1"},
+			expects: expects{getCall: true, getCallAns: repoModel.Order{OwnerUserID: "12345"}},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			mock := mocks.NewMockGophermartRepository(ctrl)
+			if tt.expects.getCall {
+				mock.EXPECT().GetOrderByID(gomock.Any(), gomock.Any()).Return(tt.expects.getCallAns, tt.expects.getError)
+			}
+			if tt.expects.postNewCall {
+				mock.EXPECT().PostNewOrder(gomock.Any(), gomock.Any(), gomock.Any()).Return(tt.expects.postError)
+			}
+
+			serv := NewGophermartService(mock, dummy.NewDummyLogger(), jwt.NewJWT(dummy.NewDummyLogger()))
+			err := serv.ProcessNewOrder(context.Background(), tt.param.userID, tt.param.orderID)
+
+			if tt.want.finalErr != nil {
+				assert.Equal(t, tt.want.finalErr, err)
+			} else {
+				assert.NoError(t, err)
 			}
 		})
 	}

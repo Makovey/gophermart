@@ -50,6 +50,20 @@ func (mr *MockGophermartServiceMockRecorder) LoginUser(ctx, request interface{})
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LoginUser", reflect.TypeOf((*MockGophermartService)(nil).LoginUser), ctx, request)
 }
 
+// ProcessNewOrder mocks base method.
+func (m *MockGophermartService) ProcessNewOrder(ctx context.Context, userID, orderID string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ProcessNewOrder", ctx, userID, orderID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// ProcessNewOrder indicates an expected call of ProcessNewOrder.
+func (mr *MockGophermartServiceMockRecorder) ProcessNewOrder(ctx, userID, orderID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ProcessNewOrder", reflect.TypeOf((*MockGophermartService)(nil).ProcessNewOrder), ctx, userID, orderID)
+}
+
 // RegisterNewUser mocks base method.
 func (m *MockGophermartService) RegisterNewUser(ctx context.Context, request model.AuthRequest) (string, error) {
 	m.ctrl.T.Helper()
@@ -63,4 +77,18 @@ func (m *MockGophermartService) RegisterNewUser(ctx context.Context, request mod
 func (mr *MockGophermartServiceMockRecorder) RegisterNewUser(ctx, request interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterNewUser", reflect.TypeOf((*MockGophermartService)(nil).RegisterNewUser), ctx, request)
+}
+
+// ValidateOrderID mocks base method.
+func (m *MockGophermartService) ValidateOrderID(orderID string) bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ValidateOrderID", orderID)
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// ValidateOrderID indicates an expected call of ValidateOrderID.
+func (mr *MockGophermartServiceMockRecorder) ValidateOrderID(orderID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidateOrderID", reflect.TypeOf((*MockGophermartService)(nil).ValidateOrderID), orderID)
 }

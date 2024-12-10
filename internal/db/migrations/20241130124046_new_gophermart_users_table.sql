@@ -10,5 +10,5 @@ CREATE TABLE IF NOT EXISTS gophermart_users (
 
 -- +goose Down
 -- +goose StatementBegin
-DROP TABLE gophermart_users;
+DROP TABLE gophermart_users CASCADE;
 -- +goose StatementEnd

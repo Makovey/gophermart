@@ -35,6 +35,21 @@ func (m *MockGophermartRepository) EXPECT() *MockGophermartRepositoryMockRecorde
 	return m.recorder
 }
 
+// GetOrderByID mocks base method.
+func (m *MockGophermartRepository) GetOrderByID(ctx context.Context, orderID string) (model.Order, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetOrderByID", ctx, orderID)
+	ret0, _ := ret[0].(model.Order)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetOrderByID indicates an expected call of GetOrderByID.
+func (mr *MockGophermartRepositoryMockRecorder) GetOrderByID(ctx, orderID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrderByID", reflect.TypeOf((*MockGophermartRepository)(nil).GetOrderByID), ctx, orderID)
+}
+
 // LoginUser mocks base method.
 func (m *MockGophermartRepository) LoginUser(ctx context.Context, login string) (model.RegisterUser, error) {
 	m.ctrl.T.Helper()
@@ -48,6 +63,20 @@ func (m *MockGophermartRepository) LoginUser(ctx context.Context, login string) 
 func (mr *MockGophermartRepositoryMockRecorder) LoginUser(ctx, login interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LoginUser", reflect.TypeOf((*MockGophermartRepository)(nil).LoginUser), ctx, login)
+}
+
+// PostNewOrder mocks base method.
+func (m *MockGophermartRepository) PostNewOrder(ctx context.Context, orderID, userID string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "PostNewOrder", ctx, orderID, userID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// PostNewOrder indicates an expected call of PostNewOrder.
+func (mr *MockGophermartRepositoryMockRecorder) PostNewOrder(ctx, orderID, userID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PostNewOrder", reflect.TypeOf((*MockGophermartRepository)(nil).PostNewOrder), ctx, orderID, userID)
 }
 
 // RegisterNewUser mocks base method.

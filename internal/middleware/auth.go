@@ -11,6 +11,10 @@ import (
 	"github.com/Makovey/gophermart/pkg/jwt"
 )
 
+const (
+	CtxUserIDKey = "UserIDKey"
+)
+
 type Auth struct {
 	jwt *jwt.JWT
 	log logger.Logger
@@ -37,6 +41,7 @@ func (a Auth) Authenticate(next http.Handler) http.Handler {
 			case errors.Is(err, jwt.ErrParseToken):
 				a.log.Info(fmt.Sprintf("%s: failed to parse token", fn), "token", authHeader)
 				responseWithError(w, http.StatusInternalServerError, "internal server error, please try again")
+				return
 			case errors.Is(err, jwt.ErrSigningMethod),
 				errors.Is(err, jwt.ErrInvalidToken),
 				errors.Is(err, jwt.ErrTokenExpired):
@@ -46,7 +51,7 @@ func (a Auth) Authenticate(next http.Handler) http.Handler {
 			}
 		}
 
-		ctx := context.WithValue(r.Context(), "CtxUserIDKey", userID) // TODO: change to const
+		ctx := context.WithValue(r.Context(), CtxUserIDKey, userID)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

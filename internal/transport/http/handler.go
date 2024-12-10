@@ -1,11 +1,16 @@
 package http
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
+	"unicode/utf8"
 
 	"github.com/Makovey/gophermart/internal/logger"
+	"github.com/Makovey/gophermart/internal/middleware"
+	"github.com/Makovey/gophermart/internal/service/gophermart"
 	"github.com/Makovey/gophermart/internal/transport"
 )
 
@@ -13,6 +18,13 @@ type handler struct {
 	log logger.Logger
 
 	service transport.GophermartService
+}
+
+func NewHTTPHandler(
+	log logger.Logger,
+	service transport.GophermartService,
+) transport.HTTPHandler {
+	return &handler{log: log, service: service}
 }
 
 func (h handler) writeResponseWithError(w http.ResponseWriter, statusCode int, message string) {
@@ -52,9 +64,15 @@ func writeJSON(w http.ResponseWriter, statusCode int, data any) error {
 	return nil
 }
 
-func NewHTTPHandler(
-	log logger.Logger,
-	service transport.GophermartService,
-) transport.HTTPHandler {
-	return &handler{log: log, service: service}
+func getUserIDFromContext(ctx context.Context) (string, error) {
+	if ctx.Value(middleware.CtxUserIDKey) == nil {
+		return "", errors.New("user id not found in context")
+	}
+
+	key := ctx.Value(middleware.CtxUserIDKey).(string)
+	if utf8.RuneCountInString(key) != gophermart.UserIDLength {
+		return "", errors.New("invalid user id")
+	}
+
+	return key, nil
 }

@@ -10,4 +10,7 @@ import (
 type GophermartService interface {
 	RegisterNewUser(ctx context.Context, request model.AuthRequest) (string, error)
 	LoginUser(ctx context.Context, request model.AuthRequest) (string, error)
+
+	ValidateOrderID(orderID string) bool
+	ProcessNewOrder(ctx context.Context, userID, orderID string) error
 }
