@@ -7,4 +7,5 @@ type HTTPHandler interface {
 	Login(w http.ResponseWriter, r *http.Request)
 
 	PostOrder(w http.ResponseWriter, r *http.Request)
+	GetOrders(w http.ResponseWriter, r *http.Request)
 }

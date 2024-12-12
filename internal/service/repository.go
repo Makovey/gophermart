@@ -12,5 +12,6 @@ type GophermartRepository interface {
 	LoginUser(ctx context.Context, login string) (model.RegisterUser, error)
 
 	GetOrderByID(ctx context.Context, orderID string) (model.Order, error)
+	GetOrders(ctx context.Context, userID string) ([]model.Order, error)
 	PostNewOrder(ctx context.Context, orderID, userID string) error
 }

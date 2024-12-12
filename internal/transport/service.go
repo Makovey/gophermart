@@ -13,4 +13,5 @@ type GophermartService interface {
 
 	ValidateOrderID(orderID string) bool
 	ProcessNewOrder(ctx context.Context, userID, orderID string) error
+	GetOrders(ctx context.Context, userID string) ([]model.Order, error)
 }

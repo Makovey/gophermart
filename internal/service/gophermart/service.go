@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"golang.org/x/crypto/bcrypt"
 	"strconv"
+	"time"
 
 	"github.com/google/uuid"
 
@@ -107,4 +108,31 @@ func (s serv) ProcessNewOrder(ctx context.Context, userID, orderID string) error
 	}
 
 	return service.ErrOrderAlreadyPosted
+}
+
+func (s serv) GetOrders(ctx context.Context, userID string) ([]model.Order, error) {
+	repoOrders, err := s.repo.GetOrders(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	var models []model.Order
+	for _, repOrder := range repoOrders {
+		var accrual *float64
+		if repOrder.Accrual != nil {
+			float := repOrder.Accrual.Round(2).InexactFloat64()
+			accrual = &float
+		}
+
+		order := model.Order{
+			Number:     repOrder.OrderID,
+			Status:     repOrder.Status,
+			Accrual:    accrual,
+			UploadedAt: repOrder.CreatedAt.Format(time.RFC3339),
+		}
+
+		models = append(models, order)
+	}
+
+	return models, nil
 }

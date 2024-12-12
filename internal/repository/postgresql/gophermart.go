@@ -120,6 +120,39 @@ func (r *repo) PostNewOrder(ctx context.Context, orderID, userID string) error {
 	return nil
 }
 
+func (r *repo) GetOrders(ctx context.Context, userID string) ([]model.Order, error) {
+	fn := "postgresql.GetOrders"
+
+	rows, err := r.conn.Query(
+		ctx,
+		`SELECT * FROM gophermart_orders WHERE owner_user_id = $1 ORDER BY created_at DESC`,
+		userID,
+	)
+	if err != nil {
+		r.log.Error(fmt.Sprintf("%s: failed to query orders", fn), "error", err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	var orders []model.Order
+	for rows.Next() {
+		var order model.Order
+		err = rows.Scan(&order.OrderID, &order.OwnerUserID, &order.Status, &order.Accrual, &order.CreatedAt)
+		if err != nil {
+			r.log.Error(fmt.Sprintf("%s: failed to scan orders", fn), "error", err)
+			return nil, err
+		}
+		orders = append(orders, order)
+	}
+
+	if err = rows.Err(); err != nil {
+		r.log.Error(fmt.Sprintf("%s: failed to iterate orders", fn), "error", err)
+		return nil, err
+	}
+
+	return orders, nil
+}
+
 func (r *repo) Close() error {
 	return r.conn.Close(context.Background())
 }

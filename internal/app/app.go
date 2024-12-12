@@ -39,7 +39,7 @@ func (a App) initRouter() http.Handler {
 		authMiddleware := middleware.NewAuth(a.deps.JWT(), a.deps.Logger())
 
 		r.Use(authMiddleware.Authenticate)
-		r.Get("/api/user/orders", func(w http.ResponseWriter, r *http.Request) {})
+		r.Get("/api/user/orders", a.deps.Handler().GetOrders)
 		r.Post("/api/user/orders", a.deps.Handler().PostOrder)
 
 		r.Get("/api/user/balance", func(w http.ResponseWriter, r *http.Request) {})

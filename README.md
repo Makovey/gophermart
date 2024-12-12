@@ -4,7 +4,7 @@
 2. `docker compose up`
 3. `make install-deps`
 4. `make mig-u` 
-5. set variable for secrets jwt with key `gophermart_key`
+5. set env variable for secrets jwt with key `gophermart_key`
 6. `go run ./...`
 
 ---

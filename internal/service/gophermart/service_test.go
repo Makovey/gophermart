@@ -4,10 +4,13 @@ import (
 	"context"
 	"errors"
 	"golang.org/x/crypto/bcrypt"
+	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/golang/mock/gomock"
+	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/Makovey/gophermart/internal/logger/dummy"
@@ -18,14 +21,14 @@ import (
 	"github.com/Makovey/gophermart/pkg/jwt"
 )
 
-func TestGeneratePasswordHash(t *testing.T) {
+func TestRegisterNewUser(t *testing.T) {
 	type params struct {
 		authModel model.AuthRequest
 	}
 
 	type expects struct {
-		expectRepoCall bool
-		repoError      error
+		repoCall  bool
+		repoError error
 	}
 
 	tests := []struct {
@@ -36,12 +39,12 @@ func TestGeneratePasswordHash(t *testing.T) {
 		{
 			name:    "successful generate new authorization token",
 			param:   params{authModel: model.AuthRequest{Login: "testableLogin", Password: "testablePassword"}},
-			expects: expects{expectRepoCall: true},
+			expects: expects{repoCall: true},
 		},
 		{
 			name:    "failed generate new authorization token with repo error",
 			param:   params{authModel: model.AuthRequest{Login: "testableLogin", Password: "testablePassword"}},
-			expects: expects{expectRepoCall: true, repoError: errors.New("repoError")},
+			expects: expects{repoCall: true, repoError: errors.New("repoError")},
 		},
 		{
 			name:    "failed generate new authorization token with long password",
@@ -56,7 +59,7 @@ func TestGeneratePasswordHash(t *testing.T) {
 			defer ctrl.Finish()
 
 			mock := mocks.NewMockGophermartRepository(ctrl)
-			if tt.expects.expectRepoCall {
+			if tt.expects.repoCall {
 				mock.EXPECT().RegisterNewUser(gomock.Any(), gomock.Any()).Return(tt.expects.repoError)
 			}
 
@@ -64,10 +67,8 @@ func TestGeneratePasswordHash(t *testing.T) {
 			token, err := serv.RegisterNewUser(context.Background(), tt.param.authModel)
 
 			if err != nil {
-				assert.Error(t, err)
 				assert.Empty(t, token)
 			} else {
-				assert.NoError(t, err)
 				assert.NotEmpty(t, token)
 			}
 		})
@@ -80,7 +81,6 @@ func TestLoginUser(t *testing.T) {
 	}
 
 	type expects struct {
-		repoCall   bool
 		repoError  error
 		repoAnswer repoModel.RegisterUser
 	}
@@ -93,17 +93,17 @@ func TestLoginUser(t *testing.T) {
 		{
 			name:    "successful generate new authorization token",
 			param:   params{authModel: model.AuthRequest{Login: "testableLogin", Password: "testablePassword"}},
-			expects: expects{repoCall: true, repoAnswer: repoModel.RegisterUser{UserID: "id", Login: "testableLogin", PasswordHash: "testablePassword"}},
+			expects: expects{repoAnswer: repoModel.RegisterUser{UserID: "id", Login: "testableLogin", PasswordHash: "testablePassword"}},
 		},
 		{
 			name:    "failed login: repo error",
 			param:   params{authModel: model.AuthRequest{Login: "testableLogin", Password: "testablePassword"}},
-			expects: expects{repoCall: true, repoError: errors.New("repoError")},
+			expects: expects{repoError: errors.New("repoError")},
 		},
 		{
 			name:    "failed  login: password does not match",
 			param:   params{authModel: model.AuthRequest{Login: "testableLogin", Password: "newPassword"}},
-			expects: expects{repoCall: true},
+			expects: expects{},
 		},
 	}
 
@@ -116,18 +116,14 @@ func TestLoginUser(t *testing.T) {
 			tt.expects.repoAnswer.PasswordHash = string(pass)
 
 			mock := mocks.NewMockGophermartRepository(ctrl)
-			if tt.expects.repoCall {
-				mock.EXPECT().LoginUser(gomock.Any(), gomock.Any()).Return(tt.expects.repoAnswer, tt.expects.repoError)
-			}
+			mock.EXPECT().LoginUser(gomock.Any(), tt.param.authModel.Login).Return(tt.expects.repoAnswer, tt.expects.repoError)
 
 			serv := NewGophermartService(mock, dummy.NewDummyLogger(), jwt.NewJWT(dummy.NewDummyLogger()))
 			token, err := serv.LoginUser(context.Background(), tt.param.authModel)
 
 			if err != nil {
-				assert.Error(t, err)
 				assert.Empty(t, token)
 			} else {
-				assert.NoError(t, err)
 				assert.NotEmpty(t, token)
 			}
 		})
@@ -195,7 +191,6 @@ func TestProcessNewOrder(t *testing.T) {
 	}
 
 	type expects struct {
-		getCall     bool
 		getError    error
 		getCallAns  repoModel.Order
 		postNewCall bool
@@ -212,25 +207,25 @@ func TestProcessNewOrder(t *testing.T) {
 			name:    "process order: posted new order",
 			want:    want{finalErr: nil},
 			param:   params{userID: "12345", orderID: "1"},
-			expects: expects{getCall: true, getError: service.ErrNotFound, postNewCall: true, postError: nil},
+			expects: expects{getError: service.ErrNotFound, postNewCall: true, postError: nil},
 		},
 		{
 			name:    "process order: posted new order with error",
 			want:    want{finalErr: service.ErrExecStmt},
 			param:   params{userID: "12345", orderID: "1"},
-			expects: expects{getCall: true, getError: service.ErrNotFound, postNewCall: true, postError: service.ErrExecStmt},
+			expects: expects{getError: service.ErrNotFound, postNewCall: true, postError: service.ErrExecStmt},
 		},
 		{
 			name:    "process error: order already posted by another user",
 			want:    want{finalErr: service.ErrOrderConflict},
 			param:   params{userID: "12345", orderID: "1"},
-			expects: expects{getCall: true, getCallAns: repoModel.Order{OwnerUserID: "1"}},
+			expects: expects{getCallAns: repoModel.Order{OwnerUserID: "1"}},
 		},
 		{
 			name:    "process order: already posted by user",
 			want:    want{finalErr: service.ErrOrderAlreadyPosted},
 			param:   params{userID: "12345", orderID: "1"},
-			expects: expects{getCall: true, getCallAns: repoModel.Order{OwnerUserID: "12345"}},
+			expects: expects{getCallAns: repoModel.Order{OwnerUserID: "12345"}},
 		},
 	}
 
@@ -240,11 +235,10 @@ func TestProcessNewOrder(t *testing.T) {
 			defer ctrl.Finish()
 
 			mock := mocks.NewMockGophermartRepository(ctrl)
-			if tt.expects.getCall {
-				mock.EXPECT().GetOrderByID(gomock.Any(), gomock.Any()).Return(tt.expects.getCallAns, tt.expects.getError)
-			}
+			mock.EXPECT().GetOrderByID(gomock.Any(), tt.param.orderID).Return(tt.expects.getCallAns, tt.expects.getError)
+
 			if tt.expects.postNewCall {
-				mock.EXPECT().PostNewOrder(gomock.Any(), gomock.Any(), gomock.Any()).Return(tt.expects.postError)
+				mock.EXPECT().PostNewOrder(gomock.Any(), tt.param.orderID, tt.param.userID).Return(tt.expects.postError)
 			}
 
 			serv := NewGophermartService(mock, dummy.NewDummyLogger(), jwt.NewJWT(dummy.NewDummyLogger()))
@@ -257,4 +251,82 @@ func TestProcessNewOrder(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestGetOrders(t *testing.T) {
+	type want struct {
+		resultLen int
+		err       bool
+	}
+
+	type params struct {
+		userID string
+	}
+
+	type expects struct {
+		repoError  error
+		repoResult []repoModel.Order
+	}
+
+	tests := []struct {
+		name    string
+		want    want
+		param   params
+		expects expects
+	}{
+		{
+			name:    "successful get orders",
+			want:    want{resultLen: 5},
+			param:   params{userID: "12345"},
+			expects: expects{repoResult: generateModels(5)},
+		},
+		{
+			name:    "get orders: repo error",
+			want:    want{resultLen: 0},
+			param:   params{userID: "12345"},
+			expects: expects{repoResult: nil, repoError: errors.New("err")},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			mock := mocks.NewMockGophermartRepository(ctrl)
+			mock.EXPECT().GetOrders(gomock.Any(), tt.param.userID).Return(tt.expects.repoResult, tt.expects.repoError)
+
+			serv := NewGophermartService(mock, dummy.NewDummyLogger(), jwt.NewJWT(dummy.NewDummyLogger()))
+			models, err := serv.GetOrders(context.Background(), tt.param.userID)
+
+			if tt.want.err {
+				assert.Error(t, err)
+				assert.Nil(t, models)
+			}
+
+			assert.Equal(t, tt.want.resultLen, len(models))
+		})
+	}
+}
+
+func generateModels(len int) []repoModel.Order {
+	var models []repoModel.Order
+	for i := 0; i < len; i++ {
+		models = append(models, repoModel.Order{
+			OrderID:     strconv.Itoa(i),
+			OwnerUserID: strconv.Itoa(i),
+			Status:      repoModel.New,
+			Accrual:     newPointerDec(i),
+			CreatedAt:   time.Now(),
+		})
+	}
+
+	return models
+}
+
+func newPointerDec(val int) *decimal.Decimal {
+	d := new(decimal.Decimal)
+	i := decimal.NewFromInt(int64(val))
+	d = &i
+	return d
 }

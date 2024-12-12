@@ -35,6 +35,21 @@ func (m *MockGophermartService) EXPECT() *MockGophermartServiceMockRecorder {
 	return m.recorder
 }
 
+// GetOrders mocks base method.
+func (m *MockGophermartService) GetOrders(ctx context.Context, userID string) ([]model.Order, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetOrders", ctx, userID)
+	ret0, _ := ret[0].([]model.Order)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetOrders indicates an expected call of GetOrders.
+func (mr *MockGophermartServiceMockRecorder) GetOrders(ctx, userID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrders", reflect.TypeOf((*MockGophermartService)(nil).GetOrders), ctx, userID)
+}
+
 // LoginUser mocks base method.
 func (m *MockGophermartService) LoginUser(ctx context.Context, request model.AuthRequest) (string, error) {
 	m.ctrl.T.Helper()

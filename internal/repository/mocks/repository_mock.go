@@ -50,6 +50,21 @@ func (mr *MockGophermartRepositoryMockRecorder) GetOrderByID(ctx, orderID interf
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrderByID", reflect.TypeOf((*MockGophermartRepository)(nil).GetOrderByID), ctx, orderID)
 }
 
+// GetOrders mocks base method.
+func (m *MockGophermartRepository) GetOrders(ctx context.Context, userID string) ([]model.Order, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetOrders", ctx, userID)
+	ret0, _ := ret[0].([]model.Order)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetOrders indicates an expected call of GetOrders.
+func (mr *MockGophermartRepositoryMockRecorder) GetOrders(ctx, userID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrders", reflect.TypeOf((*MockGophermartRepository)(nil).GetOrders), ctx, userID)
+}
+
 // LoginUser mocks base method.
 func (m *MockGophermartRepository) LoginUser(ctx context.Context, login string) (model.RegisterUser, error) {
 	m.ctrl.T.Helper()

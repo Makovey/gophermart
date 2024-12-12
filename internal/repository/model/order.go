@@ -1,6 +1,10 @@
 package model
 
-import "github.com/shopspring/decimal"
+import (
+	"time"
+
+	"github.com/shopspring/decimal"
+)
 
 type Status string
 
@@ -15,5 +19,6 @@ type Order struct {
 	OrderID     string
 	OwnerUserID string
 	Status      Status
-	Accrual     decimal.Decimal
+	Accrual     *decimal.Decimal
+	CreatedAt   time.Time
 }
