@@ -11,8 +11,10 @@ import (
 	"github.com/Makovey/gophermart/pkg/jwt"
 )
 
+type Key string
+
 const (
-	CtxUserIDKey = "UserIDKey"
+	CtxUserIDKey Key = "UserIDKey"
 )
 
 type Auth struct {

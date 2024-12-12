@@ -53,7 +53,7 @@ func (a App) initRouter() http.Handler {
 
 func (a App) runHTTPServer() {
 	shutdown := make(chan os.Signal, 1)
-	signal.Notify(shutdown, os.Interrupt, os.Kill, syscall.SIGTERM)
+	signal.Notify(shutdown, os.Interrupt, syscall.SIGTERM)
 
 	cfg := a.deps.Config()
 	a.deps.Logger().Info("starting http server on port: " + cfg.RunAddress())

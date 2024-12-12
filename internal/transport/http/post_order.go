@@ -11,7 +11,7 @@ import (
 
 const (
 	reloginAndTryAgain = "relogin and try again"
-	orderIdIsInvalid   = "order id is invalid"
+	orderIDIsInvalid   = "order id is invalid"
 )
 
 func (h handler) PostOrder(w http.ResponseWriter, r *http.Request) {
@@ -38,7 +38,7 @@ func (h handler) PostOrder(w http.ResponseWriter, r *http.Request) {
 
 	if isValid := h.service.ValidateOrderID(string(body)); !isValid {
 		h.log.Info(fmt.Sprintf("%s: invalid order id received", fn), "orderID", string(body))
-		h.writeResponseWithError(w, http.StatusUnprocessableEntity, orderIdIsInvalid)
+		h.writeResponseWithError(w, http.StatusUnprocessableEntity, orderIDIsInvalid)
 		return
 	}
 
