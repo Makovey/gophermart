@@ -3,15 +3,17 @@ package config
 import "flag"
 
 const (
-	flagRunAddress     = "a"
-	flagDatabaseURI    = "d"
-	flagAccrualAddress = "r"
+	flagRunAddress      = "a"
+	flagDatabaseURI     = "d"
+	flagAccrualAddress  = "r"
+	flagAccrualLocation = "k"
 )
 
 type flagsValue struct {
-	runAddress     string
-	databaseURI    string
-	accrualAddress string
+	runAddress          string
+	databaseURI         string
+	accrualAddress      string
+	accrualFileLocation string
 }
 
 func (v *flagsValue) parseFlagsIfNeeded() {
@@ -41,6 +43,17 @@ func (v *flagsValue) parseFlagsIfNeeded() {
 		flag.StringVar(&v.accrualAddress, flagAccrualAddress, "", "address for accrual api. In format: \"address:port\"")
 	} else {
 		v.accrualAddress = flag.Lookup(flagAccrualAddress).Value.(flag.Getter).Get().(string)
+	}
+
+	if flag.Lookup(flagAccrualLocation) == nil {
+		flag.StringVar(
+			&v.accrualFileLocation,
+			flagAccrualLocation,
+			"",
+			"accrual file location.: \"./cmd/accrual/bin\"",
+		)
+	} else {
+		v.accrualFileLocation = flag.Lookup(flagAccrualLocation).Value.(flag.Getter).Get().(string)
 	}
 
 	flag.Parse()

@@ -2,59 +2,85 @@ package app
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"os"
+	"os/exec"
 	"os/signal"
+	"path/filepath"
+	"sync"
 	"syscall"
 	"time"
+)
 
-	"github.com/go-chi/chi/v5"
-	chiMiddleware "github.com/go-chi/chi/v5/middleware"
-
-	"github.com/Makovey/gophermart/internal/middleware"
+const (
+	accrualSystemAddrFlag = "-a"
 )
 
 type App struct {
 	deps *deps
+	wg   *sync.WaitGroup
 }
 
 func NewApp() *App {
-	return &App{deps: newDeps()}
+	return &App{deps: newDeps(), wg: &sync.WaitGroup{}}
 }
 
-func (a App) Run() {
-	a.runHTTPServer()
+func (a *App) Run() {
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	a.initDependencies()
+	a.startHTTPServer(ctx)
+	a.startAccrualSystem(ctx)
+
+	a.wg.Wait()
 }
 
-func (a App) initRouter() http.Handler {
-	r := chi.NewRouter()
-	r.Use(chiMiddleware.Logger)
-	r.Use(chiMiddleware.Recoverer)
-	r.Use(middleware.NewCompressor().Compress)
-
-	r.Post("/api/user/register", a.deps.Handler().Register)
-	r.Post("/api/user/login", a.deps.Handler().Login)
-
-	r.Group(func(r chi.Router) {
-		authMiddleware := middleware.NewAuth(a.deps.JWT(), a.deps.Logger())
-
-		r.Use(authMiddleware.Authenticate)
-		r.Get("/api/user/orders", a.deps.Handler().GetOrders)
-		r.Post("/api/user/orders", a.deps.Handler().PostOrder)
-
-		r.Get("/api/user/balance", func(w http.ResponseWriter, r *http.Request) {})
-		r.Post("/api/user/balance/withdraw", func(w http.ResponseWriter, r *http.Request) {})
-
-		r.Get("/api/user/withdrawals", func(w http.ResponseWriter, r *http.Request) {})
-	})
-
-	return r
+func (a *App) initDependencies() {
+	a.deps.Config()
+	a.deps.Logger()
 }
 
-func (a App) runHTTPServer() {
-	shutdown := make(chan os.Signal, 1)
-	signal.Notify(shutdown, os.Interrupt, syscall.SIGTERM)
+func (a *App) startAccrualSystem(ctx context.Context) {
+	a.wg.Add(1)
+	go a.runAccrualSystem(ctx)
+}
 
+func (a *App) startHTTPServer(ctx context.Context) {
+	a.wg.Add(1)
+	go a.runHTTPServer(ctx)
+}
+
+func (a *App) runAccrualSystem(ctx context.Context) {
+	fileLoc := a.deps.Config().AccrualFileLocation()
+	port := a.deps.Config().AccrualAddress()
+
+	fullPath, err := filepath.Abs(fileLoc)
+	if err != nil {
+		a.deps.Logger().Error(fmt.Sprintf("can't abs absolute path from: %s", fullPath), "error", err.Error())
+	}
+
+	//cmd := exec.Command(fmt.Sprintf("%s %s=%s", fullPath, accrualSystemAddrFlag, port))
+	cmd := exec.Command(fullPath, accrualSystemAddrFlag, port)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err = cmd.Start()
+	if err != nil {
+		a.deps.Logger().Error("can't run accrual system", "err", err.Error())
+	}
+	cmd.Wait()
+
+	<-ctx.Done()
+	if cmd.ProcessState != nil {
+		if err = cmd.Process.Kill(); err != nil {
+			a.deps.Logger().Error("can't kill process with accrual system", "err", err.Error())
+		}
+	}
+	a.wg.Done()
+}
+
+func (a *App) runHTTPServer(ctx context.Context) {
 	cfg := a.deps.Config()
 	a.deps.Logger().Info("starting http server on port: " + cfg.RunAddress())
 
@@ -69,7 +95,7 @@ func (a App) runHTTPServer() {
 		}
 	}()
 
-	<-shutdown
+	<-ctx.Done()
 	a.deps.Logger().Debug("shutting down http server")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -82,4 +108,5 @@ func (a App) runHTTPServer() {
 	if err := srv.Shutdown(ctx); err != nil {
 		a.deps.Logger().Error("server forced to shutdown: %v", "error", err.Error())
 	}
+	a.wg.Done()
 }

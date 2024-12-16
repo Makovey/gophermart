@@ -10,17 +10,20 @@ type Config interface {
 	RunAddress() string
 	DatabaseURI() string
 	AccrualAddress() string
+	AccrualFileLocation() string
 }
 
 const (
-	defaultAddr    = "localhost:8080"
-	defaultAccrual = "localhost:8081"
+	defaultAddr                = "localhost:8080"
+	defaultAccrual             = ":8085"
+	defaultAccrualFileLocation = "./cmd/accrual/accrual_darwin_arm64"
 )
 
 type config struct {
-	runAddress     string
-	databaseURI    string
-	accrualAddress string
+	runAddress          string
+	databaseURI         string
+	accrualAddress      string
+	accrualFileLocation string
 }
 
 func (cfg config) RunAddress() string {
@@ -35,6 +38,10 @@ func (cfg config) AccrualAddress() string {
 	return cfg.accrualAddress
 }
 
+func (cfg config) AccrualFileLocation() string {
+	return cfg.accrualFileLocation
+}
+
 func NewConfig(log logger.Logger) Config {
 	envCfg := newEnvConfig(log)
 	flags := newFlagsValue()
@@ -42,15 +49,18 @@ func NewConfig(log logger.Logger) Config {
 	addr := runAddress(envCfg, flags)
 	dsn := databaseURI(envCfg, flags)
 	accrualAddr := accrualAddress(envCfg, flags)
+	accrualFileLoc := accrualLocation(envCfg, flags)
 
 	log.Debug("RunAddress: " + addr)
 	log.Debug("Database DSN: " + dsn)
 	log.Debug("AccrualAddr: " + accrualAddr)
+	log.Debug("AccrualFileLocation: " + accrualFileLoc)
 
 	return &config{
-		runAddress:     addr,
-		databaseURI:    dsn,
-		accrualAddress: accrualAddr,
+		runAddress:          addr,
+		databaseURI:         dsn,
+		accrualAddress:      accrualAddr,
+		accrualFileLocation: accrualFileLoc,
 	}
 }
 
@@ -92,4 +102,16 @@ func accrualAddress(envCfg envConfig, flags flagsValue) string {
 	}
 
 	return addr
+}
+
+func accrualLocation(envCfg envConfig, flags flagsValue) string {
+	loc := defaultAccrualFileLocation
+
+	if flags.accrualFileLocation != "" {
+		loc = flags.accrualFileLocation
+	} else if envCfg.AccrualFileLocation != "" {
+		loc = envCfg.AccrualFileLocation
+	}
+
+	return loc
 }

@@ -16,7 +16,7 @@ func (h handler) GetOrders(w http.ResponseWriter, r *http.Request) {
 
 	orders, err := h.service.GetOrders(r.Context(), userID)
 	if err != nil {
-		h.log.Error(fmt.Sprintf("%s: can't get orders", fn), err, err.Error())
+		h.log.Error(fmt.Sprintf("%s: can't get orders", fn), "err", err.Error())
 		h.writeResponseWithError(w, http.StatusInternalServerError, internalError)
 		return
 	}

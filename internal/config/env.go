@@ -9,9 +9,10 @@ import (
 )
 
 type envConfig struct {
-	RunAddress     string `env:"RUN_ADDRESS"`
-	DatabaseURI    string `env:"DATABASE_URI"`
-	AccrualAddress string `env:"ACCRUAL_SYSTEM_ADDRESS"`
+	RunAddress          string `env:"RUN_ADDRESS"`
+	DatabaseURI         string `env:"DATABASE_URI"`
+	AccrualAddress      string `env:"ACCRUAL_SYSTEM_ADDRESS"`
+	AccrualFileLocation string `env:"ACCRUAL_SYSTEM_LOCATION"`
 }
 
 func newEnvConfig(log logger.Logger) envConfig {
