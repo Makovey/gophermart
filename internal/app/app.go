@@ -11,6 +11,9 @@ import (
 	"sync"
 	"syscall"
 	"time"
+
+	"github.com/Makovey/gophermart/internal/service/worker"
+	"github.com/Makovey/gophermart/internal/transport/accrual"
 )
 
 const (
@@ -33,8 +36,10 @@ func (a *App) Run() {
 	a.initDependencies()
 	a.startHTTPServer(ctx)
 	a.startAccrualSystem(ctx)
+	a.startAccrualWorker(ctx)
 
 	a.wg.Wait()
+
 }
 
 func (a *App) initDependencies() {
@@ -45,11 +50,23 @@ func (a *App) initDependencies() {
 func (a *App) startAccrualSystem(ctx context.Context) {
 	a.wg.Add(1)
 	go a.runAccrualSystem(ctx)
+
 }
 
 func (a *App) startHTTPServer(ctx context.Context) {
 	a.wg.Add(1)
 	go a.runHTTPServer(ctx)
+}
+
+func (a *App) startAccrualWorker(ctx context.Context) {
+	a.wg.Add(1)
+	w := worker.NewWorker(a.deps.Repository(), accrual.NewHTTPClient())
+	w.ProcessNewOrders()
+
+	<-ctx.Done()
+	w.DownProcess()
+
+	a.wg.Done()
 }
 
 func (a *App) runAccrualSystem(ctx context.Context) {
@@ -61,7 +78,6 @@ func (a *App) runAccrualSystem(ctx context.Context) {
 		a.deps.Logger().Error(fmt.Sprintf("can't abs absolute path from: %s", fullPath), "error", err.Error())
 	}
 
-	//cmd := exec.Command(fmt.Sprintf("%s %s=%s", fullPath, accrualSystemAddrFlag, port))
 	cmd := exec.Command(fullPath, accrualSystemAddrFlag, port)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr

@@ -153,6 +153,36 @@ func (r *repo) GetOrders(ctx context.Context, userID string) ([]model.Order, err
 	return orders, nil
 }
 
+func (r *repo) FetchNewOrdersToChan(ctx context.Context, ordersCh chan<- model.Order) error {
+	fn := "postgresql.FetchNewOrdersToChan"
+
+	rows, err := r.conn.Query(
+		ctx,
+		`SELECT * FROM gophermart_orders WHERE status = 'NEW' ORDER BY created_at`,
+	)
+	if err != nil {
+		r.log.Error(fmt.Sprintf("%s: failed to query orders", fn), "error", err)
+		return err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var order model.Order
+		err = rows.Scan(&order.OrderID, &order.OwnerUserID, &order.Status, &order.Accrual, &order.CreatedAt)
+		if err != nil {
+			r.log.Error(fmt.Sprintf("%s: failed to scan orders", fn), "error", err)
+			return err
+		}
+		ordersCh <- order
+	}
+
+	if err = rows.Err(); err != nil {
+		r.log.Error(fmt.Sprintf("%s: failed to iterate orders", fn), "error", err)
+		return err
+	}
+
+	return nil
+}
+
 func (r *repo) Close() error {
 	return r.conn.Close(context.Background())
 }

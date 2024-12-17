@@ -16,3 +16,18 @@ mig-u:
 
 mig-d:
 	goose -dir ${LOCAL_MIGRATION_DIR} postgres ${LOCAL_MIGRATION_DSN} down -v
+
+test:
+	go test ./...
+
+remote-test:
+	go build -o cmd/gophermart/gophermart cmd/gophermart/*.go
+	./gophermarttest -test.v \
+	-gophermart-binary-path=cmd/gophermart/gophermart \
+	-gophermart-host=localhost \
+	-gophermart-port=8080 \
+	-gophermart-database-uri="postgres://admin:admin@localhost:5432/gophermart?sslmode=disable" \
+	-accrual-binary-path=cmd/accrual/accrual_darwin_arm64 \
+    -accrual-host=localhost \
+    -accrual-port=8085 \
+    -accrual-database-uri="postgres://admin:admin@localhost:5432/gophermart?sslmode=disable"
