@@ -1,6 +1,7 @@
 package worker
 
 import (
+	"context"
 	"time"
 
 	"github.com/Makovey/gophermart/internal/service"
@@ -27,6 +28,7 @@ func NewWorker(
 }
 
 func (w *worker) ProcessNewOrders() {
+	w.client.RegisterNewGoods(context.Background())
 	//orders := make(chan model.Order, 5)
 	//ctx, _ := context.WithCancel(context.Background())
 	//err := w.repo.FetchNewOrdersToChan(ctx, orders)

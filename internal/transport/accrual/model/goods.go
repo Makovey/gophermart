@@ -1,7 +1,5 @@
 package model
 
-import "github.com/shopspring/decimal"
-
 type RewardType string
 
 const (
@@ -10,7 +8,7 @@ const (
 )
 
 type Goods struct {
-	Match      string          `json:"match"`
-	Reward     decimal.Decimal `json:"reward"`
-	RewardType RewardType      `json:"reward_type"`
+	Match      string     `json:"match"`
+	Reward     float64    `json:"reward"`
+	RewardType RewardType `json:"reward_type"`
 }
