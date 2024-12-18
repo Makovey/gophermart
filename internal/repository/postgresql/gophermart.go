@@ -158,7 +158,7 @@ func (r *repo) FetchNewOrdersToChan(ctx context.Context, ordersCh chan<- model.O
 
 	rows, err := r.conn.Query(
 		ctx,
-		`SELECT * FROM gophermart_orders WHERE status = 'NEW' ORDER BY created_at`,
+		`SELECT * FROM gophermart_orders WHERE status = 'NEW' OR status = 'PROCESSING' ORDER BY created_at`,
 	)
 	if err != nil {
 		r.log.Error(fmt.Sprintf("%s: failed to query orders", fn), "error", err)
@@ -178,6 +178,29 @@ func (r *repo) FetchNewOrdersToChan(ctx context.Context, ordersCh chan<- model.O
 	if err = rows.Err(); err != nil {
 		r.log.Error(fmt.Sprintf("%s: failed to iterate orders", fn), "error", err)
 		return err
+	}
+
+	return nil
+}
+
+func (r *repo) UpdateOrder(ctx context.Context, status model.OrderStatus) error {
+	fn := "postgresql.UpdateOrder"
+
+	res, err := r.conn.Exec(
+		ctx,
+		`UPDATE gophermart_orders SET status = $1, accrual = $2 WHERE order_id = $3`,
+		status.Status,
+		status.Accrual,
+		status.OrderID,
+	)
+	if err != nil {
+		r.log.Error(fmt.Sprintf("%s: failed to update order", fn), "error", err)
+		return service.ErrExecStmt
+	}
+
+	if res.RowsAffected() == 0 {
+		r.log.Error(fmt.Sprintf("%s: didn't find order id, rows not affected", fn))
+		return service.ErrNotFound
 	}
 
 	return nil

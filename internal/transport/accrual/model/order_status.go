@@ -1,8 +1,9 @@
 package model
 
 import (
-	"github.com/Makovey/gophermart/internal/repository/model"
 	"github.com/shopspring/decimal"
+
+	"github.com/Makovey/gophermart/internal/repository/model"
 )
 
 type OrderStatus struct {

@@ -65,7 +65,11 @@ func (a *App) startAccrualWorker(ctx context.Context, readyCh <-chan struct{}) {
 
 	<-readyCh
 	go func() {
-		w := worker.NewWorker(a.deps.Repository(), accrual.NewHTTPClient(a.deps.Config(), a.deps.Logger()))
+		w := worker.NewWorker(
+			a.deps.Repository(),
+			accrual.NewHTTPClient(a.deps.Config(), a.deps.Logger()),
+			a.deps.Logger(),
+		)
 		w.ProcessNewOrders()
 
 		<-ctx.Done()

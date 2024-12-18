@@ -15,4 +15,5 @@ type GophermartRepository interface {
 	GetOrders(ctx context.Context, userID string) ([]model.Order, error)
 	PostNewOrder(ctx context.Context, orderID, userID string) error
 	FetchNewOrdersToChan(ctx context.Context, ordersCh chan<- model.Order) error
+	UpdateOrder(ctx context.Context, status model.OrderStatus) error
 }
