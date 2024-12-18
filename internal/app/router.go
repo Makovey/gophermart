@@ -4,9 +4,9 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	chiMiddleware "github.com/go-chi/chi/v5/middleware"
 
 	"github.com/Makovey/gophermart/internal/middleware"
-	chiMiddleware "github.com/go-chi/chi/v5/middleware"
 )
 
 func (a *App) initRouter() http.Handler {

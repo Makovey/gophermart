@@ -4,8 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/Makovey/gophermart/internal/config"
 	"github.com/Makovey/gophermart/internal/logger"
@@ -19,11 +21,11 @@ const (
 
 type repo struct {
 	log  logger.Logger
-	conn *pgx.Conn
+	conn *pgxpool.Pool
 }
 
 func NewPostgresRepo(log logger.Logger, cfg config.Config) service.GophermartRepository {
-	conn, err := pgx.Connect(context.Background(), cfg.DatabaseURI())
+	conn, err := pgxpool.New(context.Background(), cfg.DatabaseURI())
 	if err != nil {
 		log.Error("unable to connect to database", "error", err.Error())
 		panic(err)
@@ -165,6 +167,7 @@ func (r *repo) FetchNewOrdersToChan(ctx context.Context, ordersCh chan<- model.O
 		return err
 	}
 	defer rows.Close()
+
 	for rows.Next() {
 		var order model.Order
 		err = rows.Scan(&order.OrderID, &order.OwnerUserID, &order.Status, &order.Accrual, &order.CreatedAt)
@@ -172,7 +175,13 @@ func (r *repo) FetchNewOrdersToChan(ctx context.Context, ordersCh chan<- model.O
 			r.log.Error(fmt.Sprintf("%s: failed to scan orders", fn), "error", err)
 			return err
 		}
-		ordersCh <- order
+
+		select {
+		case <-ctx.Done():
+			r.log.Info(fmt.Sprintf("%s: context cancelled", fn))
+			return ctx.Err()
+		case ordersCh <- order:
+		}
 	}
 
 	if err = rows.Err(); err != nil {
@@ -207,5 +216,6 @@ func (r *repo) UpdateOrder(ctx context.Context, status model.OrderStatus) error 
 }
 
 func (r *repo) Close() error {
-	return r.conn.Close(context.Background())
+	r.conn.Close()
+	return nil
 }

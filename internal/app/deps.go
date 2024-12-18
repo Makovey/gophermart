@@ -1,7 +1,6 @@
 package app
 
 import (
-	"github.com/Makovey/gophermart/pkg/jwt"
 	"io"
 
 	"github.com/Makovey/gophermart/internal/config"
@@ -12,6 +11,7 @@ import (
 	"github.com/Makovey/gophermart/internal/service/gophermart"
 	"github.com/Makovey/gophermart/internal/transport"
 	"github.com/Makovey/gophermart/internal/transport/http"
+	"github.com/Makovey/gophermart/pkg/jwt"
 )
 
 type deps struct {

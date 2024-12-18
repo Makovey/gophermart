@@ -75,8 +75,6 @@ func (c *HTTPClient) RegisterNewGoods(ctx context.Context) error {
 		return fmt.Errorf("expected status code - %d, actual - %d", http.StatusOK, resp.StatusCode)
 	}
 
-	c.log.Info(fmt.Sprintf("%s: response status %s", fn, resp.Status))
-
 	return nil
 }
 
@@ -122,8 +120,6 @@ func (c *HTTPClient) RegisterNewOrder(ctx context.Context, orderID string) error
 	if resp.StatusCode != http.StatusAccepted {
 		return fmt.Errorf("expected status code - %d, actual - %d", http.StatusAccepted, resp.StatusCode)
 	}
-
-	c.log.Info(fmt.Sprintf("%s: response status %s", fn, resp.Status))
 
 	return nil
 }
@@ -177,8 +173,6 @@ func (c *HTTPClient) UpdateOrderStatus(ctx context.Context, orderID string) (mod
 	if resp.StatusCode != http.StatusOK {
 		return model.OrderStatus{}, fmt.Errorf("expected status code - %d, actual - %d", http.StatusOK, resp.StatusCode)
 	}
-
-	c.log.Info(fmt.Sprintf("%s: response status %s", fn, resp.Status))
 
 	return orderStatus, nil
 }

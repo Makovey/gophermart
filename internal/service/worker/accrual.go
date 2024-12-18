@@ -7,10 +7,11 @@ import (
 	"time"
 
 	"github.com/Makovey/gophermart/internal/logger"
-	"github.com/Makovey/gophermart/internal/repository/model"
+	repoModel "github.com/Makovey/gophermart/internal/repository/model"
 	"github.com/Makovey/gophermart/internal/service"
 	"github.com/Makovey/gophermart/internal/transport"
 	"github.com/Makovey/gophermart/internal/transport/accrual"
+	"github.com/Makovey/gophermart/internal/transport/accrual/model"
 )
 
 type worker struct {
@@ -29,65 +30,91 @@ func NewWorker(
 	return &worker{
 		repo:   repo,
 		client: client,
-		ticker: time.NewTicker(time.Second),
+		ticker: time.NewTicker(time.Second * 30),
 		log:    log,
 		quit:   make(chan bool),
 	}
 }
 
 func (w *worker) ProcessNewOrders() {
-	fn := "worker.ProcessNewOrders"
-
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+
+	orders := make(chan repoModel.Order, 5)
+	w.registerNewGoods(ctx)
+	w.runFetchingProcess(ctx, cancel, orders)
+	w.runUpdatingProcess(ctx, orders)
+}
+
+func (w *worker) runFetchingProcess(
+	ctx context.Context,
+	cancel context.CancelFunc,
+	orders chan<- repoModel.Order,
+) {
+	fn := "worker.runFetchingProcess"
+
+	go func() {
+		for {
+			select {
+			case <-w.ticker.C:
+				err := w.repo.FetchNewOrdersToChan(ctx, orders)
+				if err != nil {
+					w.log.Error(fmt.Sprintf("%s: failed to fetch new orders", fn))
+				}
+			case <-w.quit:
+				cancel()
+				close(orders)
+				return
+			}
+		}
+	}()
+}
+
+func (w *worker) registerNewGoods(ctx context.Context) {
+	fn := "worker.registerNewGoods"
 
 	if err := w.client.RegisterNewGoods(ctx); err != nil {
 		w.log.Error(fmt.Sprintf("%s: failed to register new goods", fn))
 	}
+}
 
-	if err := w.client.RegisterNewOrder(ctx, "0018"); err != nil {
-		w.log.Error(fmt.Sprintf("%s: failed to register new order", fn))
-	}
+func (w *worker) runUpdatingProcess(ctx context.Context, orders <-chan repoModel.Order) {
+	fn := "worker.runUpdatingProcess"
 
-	res, err := w.client.UpdateOrderStatus(ctx, "0018")
-	if err != nil {
+	for order := range orders {
+		if err := w.client.RegisterNewOrder(ctx, order.OrderID); err != nil {
+			w.log.Error(fmt.Sprintf("%s: failed to register new order", fn))
+		}
+
+		res, err := w.client.UpdateOrderStatus(ctx, order.OrderID)
+		if err == nil {
+			w.updateOrderInfo(ctx, res)
+			continue
+		}
+
 		var manyReqErr *accrual.ManyRequestError
 		switch {
 		case errors.As(err, &manyReqErr):
 			time.AfterFunc(manyReqErr.RetryAfter+time.Second, func() {
-				retrtyRes, retryErr := w.client.UpdateOrderStatus(ctx, "0018")
+				retryRes, retryErr := w.client.UpdateOrderStatus(ctx, order.OrderID)
 				if retryErr != nil {
 					w.log.Error(fmt.Sprintf("%s: retried methods is failed", fn), "error", retryErr)
 				}
-				fmt.Println(retrtyRes)
-				w.repo.UpdateOrder(ctx, model.OrderStatus{OrderID: res.OrderID, Status: res.Status, Accrual: res.Accrual})
+				w.updateOrderInfo(ctx, retryRes)
 			})
 		default:
-			//
+			w.log.Error(fmt.Sprintf("%s: failed to update order status", fn), "error", err)
 		}
 	}
-	w.repo.UpdateOrder(ctx, model.OrderStatus{OrderID: res.OrderID, Status: res.Status, Accrual: res.Accrual})
-	//orders := make(chan model.Order, 5)
-	//ctx, _ := context.WithCancel(context.Background())
-	//err := w.repo.FetchNewOrdersToChan(ctx, orders)
-	//if err != nil {
-	//	return
-	//}
-	//
-	//w.client.SendOrder()
-	//
-	////go func() {
-	////	for {
-	////		select {
-	////		case <-w.ticker.C:
-	////			fmt.Println("processing new orders")
-	////		case <-w.quit:
-	////			stop()
-	////			close(orders)
-	////			return
-	////		}
-	////	}
-	////}()
+}
+
+func (w *worker) updateOrderInfo(ctx context.Context, status model.OrderStatus) {
+	fn := "worker.updateOrderInfo"
+
+	err := w.repo.UpdateOrder(ctx, repoModel.OrderStatus{OrderID: status.OrderID, Status: status.Status, Accrual: status.Accrual})
+	if err != nil {
+		w.log.Error(fmt.Sprintf("%s: failed to update order info", fn), "error", err)
+	}
 }
 
 func (w *worker) DownProcess() {
