@@ -2,11 +2,7 @@ package postgresql
 
 import (
 	"context"
-	"errors"
-	"fmt"
-	
-	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgconn"
+
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/Makovey/gophermart/internal/config"
@@ -22,6 +18,10 @@ const (
 type repo struct {
 	log  logger.Logger
 	conn *pgxpool.Pool
+
+	userRepo     service.UserRepository
+	orderRepo    service.OrderRepository
+	balancesRepo service.BalancesRepository
 }
 
 func NewPostgresRepo(log logger.Logger, cfg config.Config) service.GophermartRepository {
@@ -31,188 +31,41 @@ func NewPostgresRepo(log logger.Logger, cfg config.Config) service.GophermartRep
 		panic(err)
 	}
 
-	return &repo{log: log, conn: conn}
+	return &repo{
+		log:          log,
+		conn:         conn,
+		userRepo:     NewUserRepository(log, conn),
+		orderRepo:    NewOrderRepository(log, conn),
+		balancesRepo: nil,
+	}
 }
 
 func (r *repo) RegisterNewUser(ctx context.Context, user model.RegisterUser) error {
-	fn := "postgresql.RegisterNewUser"
-
-	_, err := r.conn.Exec(
-		ctx,
-		`INSERT INTO gophermart_users (user_id, login, password_hash) VALUES ($1, $2, $3)`,
-		user.UserID,
-		user.Login,
-		user.PasswordHash,
-	)
-	if err != nil {
-		r.log.Error(fmt.Sprintf("%s: failed to execute new user", fn), "error", err)
-		var pgErr *pgconn.PgError
-		if ok := errors.As(err, &pgErr); ok && pgErr.Code == errUniqueViolatesCode {
-			return service.ErrLoginIsAlreadyExist
-		}
-
-		return service.ErrExecStmt
-	}
-
-	return nil
+	return r.userRepo.RegisterNewUser(ctx, user)
 }
 
 func (r *repo) LoginUser(ctx context.Context, login string) (model.RegisterUser, error) {
-	fn := "postgresql.LoginUser"
-
-	row := r.conn.QueryRow(
-		ctx,
-		`SELECT user_id, login, password_hash FROM gophermart_users WHERE login = $1`,
-		login,
-	)
-
-	var user model.RegisterUser
-	err := row.Scan(&user.UserID, &user.Login, &user.PasswordHash)
-	if err != nil {
-		switch {
-		case errors.Is(err, pgx.ErrNoRows):
-			r.log.Info(fmt.Sprintf("%s: user with login %s not found", fn, login))
-			return model.RegisterUser{}, service.ErrNotFound
-		default:
-			r.log.Error(fmt.Sprintf("%s: failed to query user", fn), "error", err)
-			return model.RegisterUser{}, service.ErrExecStmt
-		}
-	}
-
-	return user, nil
+	return r.userRepo.LoginUser(ctx, login)
 }
 
 func (r *repo) GetOrderByID(ctx context.Context, orderID string) (model.Order, error) {
-	fn := "postgresql.GetOrderByID"
-
-	row := r.conn.QueryRow(
-		ctx,
-		`SELECT order_id, owner_user_id, status, accrual FROM gophermart_orders WHERE order_id = $1`,
-		orderID,
-	)
-	var order model.Order
-	err := row.Scan(&order.OrderID, &order.OwnerUserID, &order.Status, &order.Accrual)
-	if err != nil {
-		switch {
-		case errors.Is(err, pgx.ErrNoRows):
-			r.log.Info(fmt.Sprintf("%s: user with order %s not found", fn, orderID))
-			return model.Order{}, service.ErrNotFound
-		default:
-			r.log.Error(fmt.Sprintf("%s: failed to query user", fn), "error", err)
-			return model.Order{}, service.ErrExecStmt
-		}
-	}
-	return order, nil
+	return r.orderRepo.GetOrderByID(ctx, orderID)
 }
 
 func (r *repo) PostNewOrder(ctx context.Context, orderID, userID string) error {
-	fn := "postgresql.PostNewOrder"
-
-	_, err := r.conn.Exec(
-		ctx,
-		`INSERT INTO gophermart_orders (order_id, owner_user_id, status) VALUES ($1, $2, 'NEW')`,
-		orderID,
-		userID,
-	)
-	if err != nil {
-		r.log.Error(fmt.Sprintf("%s: failed to post new order", fn), "error", err)
-		return service.ErrExecStmt
-	}
-
-	return nil
+	return r.orderRepo.PostNewOrder(ctx, orderID, userID)
 }
 
 func (r *repo) GetOrders(ctx context.Context, userID string) ([]model.Order, error) {
-	fn := "postgresql.GetOrders"
-
-	rows, err := r.conn.Query(
-		ctx,
-		`SELECT * FROM gophermart_orders WHERE owner_user_id = $1 ORDER BY created_at DESC`,
-		userID,
-	)
-	if err != nil {
-		r.log.Error(fmt.Sprintf("%s: failed to query orders", fn), "error", err)
-		return nil, err
-	}
-	defer rows.Close()
-
-	var orders []model.Order
-	for rows.Next() {
-		var order model.Order
-		err = rows.Scan(&order.OrderID, &order.OwnerUserID, &order.Status, &order.Accrual, &order.CreatedAt)
-		if err != nil {
-			r.log.Error(fmt.Sprintf("%s: failed to scan orders", fn), "error", err)
-			return nil, err
-		}
-		orders = append(orders, order)
-	}
-
-	if err = rows.Err(); err != nil {
-		r.log.Error(fmt.Sprintf("%s: failed to iterate orders", fn), "error", err)
-		return nil, err
-	}
-
-	return orders, nil
+	return r.orderRepo.GetOrders(ctx, userID)
 }
 
 func (r *repo) FetchNewOrdersToChan(ctx context.Context, ordersCh chan<- model.Order) error {
-	fn := "postgresql.FetchNewOrdersToChan"
-
-	rows, err := r.conn.Query(
-		ctx,
-		`SELECT * FROM gophermart_orders WHERE status = 'NEW' OR status = 'PROCESSING' ORDER BY created_at`,
-	)
-	if err != nil {
-		r.log.Error(fmt.Sprintf("%s: failed to query orders", fn), "error", err)
-		return err
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		var order model.Order
-		err = rows.Scan(&order.OrderID, &order.OwnerUserID, &order.Status, &order.Accrual, &order.CreatedAt)
-		if err != nil {
-			r.log.Error(fmt.Sprintf("%s: failed to scan orders", fn), "error", err)
-			return err
-		}
-
-		select {
-		case <-ctx.Done():
-			r.log.Info(fmt.Sprintf("%s: context cancelled", fn))
-			return ctx.Err()
-		case ordersCh <- order:
-		}
-	}
-
-	if err = rows.Err(); err != nil {
-		r.log.Error(fmt.Sprintf("%s: failed to iterate orders", fn), "error", err)
-		return err
-	}
-
-	return nil
+	return r.orderRepo.FetchNewOrdersToChan(ctx, ordersCh)
 }
 
 func (r *repo) UpdateOrder(ctx context.Context, status model.OrderStatus) error {
-	fn := "postgresql.UpdateOrder"
-
-	res, err := r.conn.Exec(
-		ctx,
-		`UPDATE gophermart_orders SET status = $1, accrual = $2 WHERE order_id = $3`,
-		status.Status,
-		status.Accrual,
-		status.OrderID,
-	)
-	if err != nil {
-		r.log.Error(fmt.Sprintf("%s: failed to update order", fn), "error", err)
-		return service.ErrExecStmt
-	}
-
-	if res.RowsAffected() == 0 {
-		r.log.Error(fmt.Sprintf("%s: didn't find order id, rows not affected", fn))
-		return service.ErrNotFound
-	}
-
-	return nil
+	return r.orderRepo.UpdateOrder(ctx, status)
 }
 
 func (r *repo) Close() error {
