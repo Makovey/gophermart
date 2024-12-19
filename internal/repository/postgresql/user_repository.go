@@ -14,6 +14,10 @@ import (
 	"github.com/Makovey/gophermart/internal/service"
 )
 
+const (
+	errUniqueViolatesCode = "23505"
+)
+
 type userRepository struct {
 	log  logger.Logger
 	pool *pgxpool.Pool

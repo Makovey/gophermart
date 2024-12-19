@@ -15,11 +15,12 @@ import (
 )
 
 type worker struct {
-	repo   service.GophermartRepository
-	client transport.Accrual
-	ticker *time.Ticker
-	log    logger.Logger
-	quit   chan bool
+	orderRepo   service.OrderRepository
+	balanceRepo service.BalancesRepository
+	client      transport.Accrual
+	ticker      *time.Ticker
+	log         logger.Logger
+	quit        chan bool
 }
 
 func NewWorker(
@@ -28,11 +29,12 @@ func NewWorker(
 	log logger.Logger,
 ) service.Worker {
 	return &worker{
-		repo:   repo,
-		client: client,
-		ticker: time.NewTicker(time.Second * 30),
-		log:    log,
-		quit:   make(chan bool),
+		orderRepo:   repo,
+		balanceRepo: repo,
+		client:      client,
+		ticker:      time.NewTicker(time.Second * 30),
+		log:         log,
+		quit:        make(chan bool),
 	}
 }
 
@@ -57,7 +59,7 @@ func (w *worker) runFetchingProcess(
 		for {
 			select {
 			case <-w.ticker.C:
-				err := w.repo.FetchNewOrdersToChan(ctx, orders)
+				err := w.orderRepo.FetchNewOrdersToChan(ctx, orders)
 				if err != nil {
 					w.log.Error(fmt.Sprintf("%s: failed to fetch new orders", fn))
 				}
@@ -83,12 +85,12 @@ func (w *worker) runUpdatingProcess(ctx context.Context, orders <-chan repoModel
 
 	for order := range orders {
 		if err := w.client.RegisterNewOrder(ctx, order.OrderID); err != nil {
-			w.log.Error(fmt.Sprintf("%s: failed to register new order", fn))
+			w.log.Error(fmt.Sprintf("%s: failed to register new order", fn), "error", err.Error())
 		}
 
 		res, err := w.client.UpdateOrderStatus(ctx, order.OrderID)
 		if err == nil {
-			w.updateOrderInfo(ctx, res)
+			w.updateOrderInfo(ctx, res, order.OwnerUserID)
 			continue
 		}
 
@@ -100,7 +102,7 @@ func (w *worker) runUpdatingProcess(ctx context.Context, orders <-chan repoModel
 				if retryErr != nil {
 					w.log.Error(fmt.Sprintf("%s: retried methods is failed", fn), "error", retryErr)
 				}
-				w.updateOrderInfo(ctx, retryRes)
+				w.updateOrderInfo(ctx, retryRes, order.OwnerUserID)
 			})
 		default:
 			w.log.Error(fmt.Sprintf("%s: failed to update order status", fn), "error", err)
@@ -108,12 +110,17 @@ func (w *worker) runUpdatingProcess(ctx context.Context, orders <-chan repoModel
 	}
 }
 
-func (w *worker) updateOrderInfo(ctx context.Context, status model.OrderStatus) {
+func (w *worker) updateOrderInfo(ctx context.Context, status model.OrderStatus, userID string) {
 	fn := "worker.updateOrderInfo"
 
-	err := w.repo.UpdateOrder(ctx, repoModel.OrderStatus{OrderID: status.OrderID, Status: status.Status, Accrual: status.Accrual})
+	err := w.orderRepo.UpdateOrder(ctx, repoModel.OrderStatus{OrderID: status.OrderID, Status: status.Status, Accrual: status.Accrual})
 	if err != nil {
 		w.log.Error(fmt.Sprintf("%s: failed to update order info", fn), "error", err)
+	}
+
+	err = w.balanceRepo.UpdateUsersBalance(ctx, userID, status.Accrual)
+	if err != nil {
+		w.log.Error(fmt.Sprintf("%s: failed to update users balance", fn), "error", err)
 	}
 }
 

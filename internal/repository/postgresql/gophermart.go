@@ -4,15 +4,12 @@ import (
 	"context"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/shopspring/decimal"
 
 	"github.com/Makovey/gophermart/internal/config"
 	"github.com/Makovey/gophermart/internal/logger"
 	"github.com/Makovey/gophermart/internal/repository/model"
 	"github.com/Makovey/gophermart/internal/service"
-)
-
-const (
-	errUniqueViolatesCode = "23505"
 )
 
 type repo struct {
@@ -36,7 +33,7 @@ func NewPostgresRepo(log logger.Logger, cfg config.Config) service.GophermartRep
 		conn:         conn,
 		userRepo:     NewUserRepository(log, conn),
 		orderRepo:    NewOrderRepository(log, conn),
-		balancesRepo: nil,
+		balancesRepo: NewBalancesRepository(log, conn),
 	}
 }
 
@@ -66,6 +63,10 @@ func (r *repo) FetchNewOrdersToChan(ctx context.Context, ordersCh chan<- model.O
 
 func (r *repo) UpdateOrder(ctx context.Context, status model.OrderStatus) error {
 	return r.orderRepo.UpdateOrder(ctx, status)
+}
+
+func (r *repo) UpdateUsersBalance(ctx context.Context, userID string, reward decimal.Decimal) error {
+	return r.balancesRepo.UpdateUsersBalance(ctx, userID, reward)
 }
 
 func (r *repo) Close() error {
