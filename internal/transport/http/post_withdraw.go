@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	
+
 	"github.com/Makovey/gophermart/internal/service"
 	"github.com/Makovey/gophermart/internal/transport/http/model"
 )

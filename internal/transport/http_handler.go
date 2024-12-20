@@ -11,4 +11,5 @@ type HTTPHandler interface {
 
 	GetBalance(w http.ResponseWriter, r *http.Request)
 	PostWithdraw(w http.ResponseWriter, r *http.Request)
+	GetWithdrawsHistory(w http.ResponseWriter, r *http.Request)
 }

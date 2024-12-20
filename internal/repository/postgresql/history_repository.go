@@ -8,6 +8,7 @@ import (
 	"github.com/shopspring/decimal"
 
 	"github.com/Makovey/gophermart/internal/logger"
+	"github.com/Makovey/gophermart/internal/repository/model"
 	"github.com/Makovey/gophermart/internal/service"
 )
 
@@ -28,7 +29,7 @@ func (h *historyRepository) RecordUsersWithdraw(ctx context.Context, userID, ord
 
 	_, err := h.pool.Exec(
 		ctx,
-		`INSERT INTO gophermart_history (owner_user_id, order_id, accrual) VALUES ($1, $2, $3)`,
+		`INSERT INTO gophermart_history (owner_user_id, order_id, withdraw) VALUES ($1, $2, $3)`,
 		userID,
 		orderID,
 		amount,
@@ -39,4 +40,38 @@ func (h *historyRepository) RecordUsersWithdraw(ctx context.Context, userID, ord
 	}
 
 	return nil
+}
+
+func (h *historyRepository) GetUsersHistory(ctx context.Context, userID string) ([]model.Withdraw, error) {
+	fn := "postgresql.GetUsersHistory"
+
+	rows, err := h.pool.Query(
+		ctx,
+		`SELECT order_id, withdraw, created_at FROM gophermart_history 
+	  	WHERE owner_user_id = $1 ORDER BY created_at DESC`,
+		userID,
+	)
+	if err != nil {
+		h.log.Error(fmt.Sprintf("%s: failed to query history withdraw", fn), "error", err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	var withdraws []model.Withdraw
+	for rows.Next() {
+		var withdraw model.Withdraw
+		err = rows.Scan(&withdraw.OrderID, &withdraw.Withdraw, &withdraw.CreatedAt)
+		if err != nil {
+			h.log.Error(fmt.Sprintf("%s: failed to scan history withdraw", fn), "error", err)
+			return nil, err
+		}
+		withdraws = append(withdraws, withdraw)
+	}
+
+	if err = rows.Err(); err != nil {
+		h.log.Error(fmt.Sprintf("%s: failed to iterate history withdraw", fn), "error", err)
+		return nil, err
+	}
+
+	return withdraws, nil
 }

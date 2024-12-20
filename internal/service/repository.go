@@ -37,4 +37,5 @@ type BalancesRepository interface {
 
 type HistoryRepository interface {
 	RecordUsersWithdraw(ctx context.Context, userID, orderID string, amount decimal.Decimal) error
+	GetUsersHistory(ctx context.Context, userID string) ([]model.Withdraw, error)
 }

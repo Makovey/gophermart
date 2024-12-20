@@ -3,33 +3,25 @@ package gophermart
 import (
 	"context"
 
-	"github.com/Makovey/gophermart/internal/logger"
 	"github.com/Makovey/gophermart/internal/service"
 	"github.com/Makovey/gophermart/internal/transport"
 	"github.com/Makovey/gophermart/internal/transport/http/model"
 	"github.com/Makovey/gophermart/internal/types"
-	"github.com/Makovey/gophermart/pkg/jwt"
 )
 
 type balanceService struct {
 	balanceRepo service.BalancesRepository
 	orderRepo   service.OrderRepository
 	historyRepo service.HistoryRepository
-	log         logger.Logger
-	jwt         *jwt.JWT
 }
 
 func newBalanceService(
 	repo service.GophermartRepository,
-	log logger.Logger,
-	jwt *jwt.JWT,
 ) transport.BalanceService {
 	return &balanceService{
 		balanceRepo: repo,
 		orderRepo:   repo,
 		historyRepo: repo,
-		log:         log,
-		jwt:         jwt,
 	}
 }
 

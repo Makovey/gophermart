@@ -20,6 +20,7 @@ type handler struct {
 	userService    transport.UserService
 	orderService   transport.OrderService
 	balanceService transport.BalanceService
+	historyService transport.HistoryService
 }
 
 func NewHTTPHandler(
@@ -31,6 +32,7 @@ func NewHTTPHandler(
 		userService:    service,
 		orderService:   service,
 		balanceService: service,
+		historyService: service,
 	}
 }
 

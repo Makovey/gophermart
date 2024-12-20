@@ -28,7 +28,7 @@ func (a *App) initRouter() http.Handler {
 		r.Get("/api/user/balance", a.deps.Handler().GetBalance)
 		r.Post("/api/user/balance/withdraw", a.deps.Handler().PostWithdraw)
 
-		r.Get("/api/user/withdrawals", func(w http.ResponseWriter, r *http.Request) {})
+		r.Get("/api/user/withdrawals", a.deps.Handler().GetWithdrawsHistory)
 	})
 
 	return r

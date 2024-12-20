@@ -11,6 +11,7 @@ type GophermartService interface {
 	UserService
 	OrderService
 	BalanceService
+	HistoryService
 }
 
 type UserService interface {
@@ -27,4 +28,8 @@ type OrderService interface {
 type BalanceService interface {
 	GetUsersBalance(ctx context.Context, userID string) (model.BalanceResponse, error)
 	WithdrawBalance(ctx context.Context, userID string, withdraw model.WithdrawRequest) error
+}
+
+type HistoryService interface {
+	GetUsersWithdrawHistory(ctx context.Context, userID string) ([]model.WithdrawHistoryResponse, error)
 }

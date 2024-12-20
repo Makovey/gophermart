@@ -11,12 +11,10 @@ import (
 )
 
 type serv struct {
-	logger logger.Logger
-	jwt    *jwt.JWT
-
 	userServ    transport.UserService
 	orderServ   transport.OrderService
 	balanceServ transport.BalanceService
+	historyServ transport.HistoryService
 }
 
 func NewGophermartService(
@@ -25,11 +23,10 @@ func NewGophermartService(
 	jwt *jwt.JWT,
 ) transport.GophermartService {
 	return &serv{
-		logger:      logger,
-		jwt:         jwt,
 		userServ:    newUserService(repo, logger, jwt),
-		orderServ:   newOrderService(repo, logger, jwt),
-		balanceServ: newBalanceService(repo, logger, jwt),
+		orderServ:   newOrderService(repo),
+		balanceServ: newBalanceService(repo),
+		historyServ: newHistoryService(repo),
 	}
 }
 
@@ -59,4 +56,8 @@ func (s *serv) GetUsersBalance(ctx context.Context, userID string) (model.Balanc
 
 func (s *serv) WithdrawBalance(ctx context.Context, userID string, withdrawModel model.WithdrawRequest) error {
 	return s.balanceServ.WithdrawBalance(ctx, userID, withdrawModel)
+}
+
+func (s *serv) GetUsersWithdrawHistory(ctx context.Context, userID string) ([]model.WithdrawHistoryResponse, error) {
+	return s.historyServ.GetUsersWithdrawHistory(ctx, userID)
 }

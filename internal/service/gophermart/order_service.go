@@ -6,30 +6,22 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/Makovey/gophermart/internal/logger"
 	"github.com/Makovey/gophermart/internal/service"
 	"github.com/Makovey/gophermart/internal/service/luhn"
 	"github.com/Makovey/gophermart/internal/transport"
 	"github.com/Makovey/gophermart/internal/transport/http/model"
 	"github.com/Makovey/gophermart/internal/types"
-	"github.com/Makovey/gophermart/pkg/jwt"
 )
 
 type orderService struct {
 	repo service.OrderRepository
-	log  logger.Logger
-	jwt  *jwt.JWT
 }
 
 func newOrderService(
 	repo service.OrderRepository,
-	log logger.Logger,
-	jwt *jwt.JWT,
 ) transport.OrderService {
 	return &orderService{
 		repo: repo,
-		log:  log,
-		jwt:  jwt,
 	}
 }
 

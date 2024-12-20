@@ -83,6 +83,10 @@ func (r *repo) RecordUsersWithdraw(ctx context.Context, userID, orderID string, 
 	return r.historyRepository.RecordUsersWithdraw(ctx, userID, orderID, amount)
 }
 
+func (r *repo) GetUsersHistory(ctx context.Context, userID string) ([]model.Withdraw, error) {
+	return r.historyRepository.GetUsersHistory(ctx, userID)
+}
+
 func (r *repo) Close() error {
 	r.conn.Close()
 	return nil
