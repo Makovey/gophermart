@@ -17,14 +17,21 @@ import (
 type handler struct {
 	log logger.Logger
 
-	service transport.GophermartService
+	userService    transport.UserService
+	orderService   transport.OrderService
+	balanceService transport.BalanceService
 }
 
 func NewHTTPHandler(
 	log logger.Logger,
 	service transport.GophermartService,
 ) transport.HTTPHandler {
-	return &handler{log: log, service: service}
+	return &handler{
+		log:            log,
+		userService:    service,
+		orderService:   service,
+		balanceService: service,
+	}
 }
 
 func (h handler) writeResponseWithError(w http.ResponseWriter, statusCode int, message string) {

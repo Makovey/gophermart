@@ -28,7 +28,7 @@ func TestGetOrdersHandler(t *testing.T) {
 
 	type expects struct {
 		getOrdersCall bool
-		orders        []model.Order
+		orders        []model.OrderResponse
 		ordersErr     error
 	}
 
@@ -125,10 +125,10 @@ func TestGetOrdersHandler(t *testing.T) {
 	}
 }
 
-func generateModels(len int) []model.Order {
-	var models []model.Order
+func generateModels(len int) []model.OrderResponse {
+	var models []model.OrderResponse
 	for i := 0; i < len; i++ {
-		models = append(models, model.Order{
+		models = append(models, model.OrderResponse{
 			Number:     strconv.Itoa(i),
 			Status:     repoModel.New,
 			Accrual:    nil,

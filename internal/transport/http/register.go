@@ -44,7 +44,7 @@ func (h handler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := h.service.RegisterNewUser(r.Context(), reqModel)
+	token, err := h.userService.RegisterNewUser(r.Context(), reqModel)
 	if err != nil {
 		switch {
 		case errors.Is(err, service.ErrLoginIsAlreadyExist):

@@ -2,7 +2,7 @@ package service
 
 import (
 	"context"
-	
+
 	"github.com/shopspring/decimal"
 
 	"github.com/Makovey/gophermart/internal/repository/model"
@@ -30,4 +30,5 @@ type OrderRepository interface {
 
 type BalancesRepository interface {
 	UpdateUsersBalance(ctx context.Context, userID string, reward decimal.Decimal) error
+	GetUsersBalance(ctx context.Context, userID string) (model.Balance, error)
 }

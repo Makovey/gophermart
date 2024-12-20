@@ -31,9 +31,9 @@ func NewPostgresRepo(log logger.Logger, cfg config.Config) service.GophermartRep
 	return &repo{
 		log:          log,
 		conn:         conn,
-		userRepo:     NewUserRepository(log, conn),
-		orderRepo:    NewOrderRepository(log, conn),
-		balancesRepo: NewBalancesRepository(log, conn),
+		userRepo:     newUserRepository(log, conn),
+		orderRepo:    newOrderRepository(log, conn),
+		balancesRepo: newBalancesRepository(log, conn),
 	}
 }
 
@@ -67,6 +67,10 @@ func (r *repo) UpdateOrder(ctx context.Context, status model.OrderStatus) error 
 
 func (r *repo) UpdateUsersBalance(ctx context.Context, userID string, reward decimal.Decimal) error {
 	return r.balancesRepo.UpdateUsersBalance(ctx, userID, reward)
+}
+
+func (r *repo) GetUsersBalance(ctx context.Context, userID string) (model.Balance, error) {
+	return r.balancesRepo.GetUsersBalance(ctx, userID)
 }
 
 func (r *repo) Close() error {

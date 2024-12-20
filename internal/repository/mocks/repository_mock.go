@@ -10,6 +10,7 @@ import (
 
 	model "github.com/Makovey/gophermart/internal/repository/model"
 	gomock "github.com/golang/mock/gomock"
+	decimal "github.com/shopspring/decimal"
 )
 
 // MockGophermartRepository is a mock of GophermartRepository interface.
@@ -79,6 +80,21 @@ func (mr *MockGophermartRepositoryMockRecorder) GetOrders(ctx, userID interface{
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrders", reflect.TypeOf((*MockGophermartRepository)(nil).GetOrders), ctx, userID)
 }
 
+// GetUsersBalance mocks base method.
+func (m *MockGophermartRepository) GetUsersBalance(ctx context.Context, userID string) (model.Balance, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUsersBalance", ctx, userID)
+	ret0, _ := ret[0].(model.Balance)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetUsersBalance indicates an expected call of GetUsersBalance.
+func (mr *MockGophermartRepositoryMockRecorder) GetUsersBalance(ctx, userID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUsersBalance", reflect.TypeOf((*MockGophermartRepository)(nil).GetUsersBalance), ctx, userID)
+}
+
 // LoginUser mocks base method.
 func (m *MockGophermartRepository) LoginUser(ctx context.Context, login string) (model.RegisterUser, error) {
 	m.ctrl.T.Helper()
@@ -134,6 +150,20 @@ func (m *MockGophermartRepository) UpdateOrder(ctx context.Context, status model
 func (mr *MockGophermartRepositoryMockRecorder) UpdateOrder(ctx, status interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateOrder", reflect.TypeOf((*MockGophermartRepository)(nil).UpdateOrder), ctx, status)
+}
+
+// UpdateUsersBalance mocks base method.
+func (m *MockGophermartRepository) UpdateUsersBalance(ctx context.Context, userID string, reward decimal.Decimal) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateUsersBalance", ctx, userID, reward)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateUsersBalance indicates an expected call of UpdateUsersBalance.
+func (mr *MockGophermartRepositoryMockRecorder) UpdateUsersBalance(ctx, userID, reward interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUsersBalance", reflect.TypeOf((*MockGophermartRepository)(nil).UpdateUsersBalance), ctx, userID, reward)
 }
 
 // MockUserRepository is a mock of UserRepository interface.
@@ -304,4 +334,33 @@ func NewMockBalancesRepository(ctrl *gomock.Controller) *MockBalancesRepository 
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockBalancesRepository) EXPECT() *MockBalancesRepositoryMockRecorder {
 	return m.recorder
+}
+
+// GetUsersBalance mocks base method.
+func (m *MockBalancesRepository) GetUsersBalance(ctx context.Context, userID string) (model.Balance, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUsersBalance", ctx, userID)
+	ret0, _ := ret[0].(model.Balance)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetUsersBalance indicates an expected call of GetUsersBalance.
+func (mr *MockBalancesRepositoryMockRecorder) GetUsersBalance(ctx, userID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUsersBalance", reflect.TypeOf((*MockBalancesRepository)(nil).GetUsersBalance), ctx, userID)
+}
+
+// UpdateUsersBalance mocks base method.
+func (m *MockBalancesRepository) UpdateUsersBalance(ctx context.Context, userID string, reward decimal.Decimal) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateUsersBalance", ctx, userID, reward)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateUsersBalance indicates an expected call of UpdateUsersBalance.
+func (mr *MockBalancesRepositoryMockRecorder) UpdateUsersBalance(ctx, userID, reward interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUsersBalance", reflect.TypeOf((*MockBalancesRepository)(nil).UpdateUsersBalance), ctx, userID, reward)
 }

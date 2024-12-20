@@ -25,7 +25,7 @@ func (a *App) initRouter() http.Handler {
 		r.Get("/api/user/orders", a.deps.Handler().GetOrders)
 		r.Post("/api/user/orders", a.deps.Handler().PostOrder)
 
-		r.Get("/api/user/balance", func(w http.ResponseWriter, r *http.Request) {})
+		r.Get("/api/user/balance", a.deps.Handler().GetBalance)
 		r.Post("/api/user/balance/withdraw", func(w http.ResponseWriter, r *http.Request) {})
 
 		r.Get("/api/user/withdrawals", func(w http.ResponseWriter, r *http.Request) {})

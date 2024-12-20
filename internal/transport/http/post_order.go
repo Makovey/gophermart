@@ -36,13 +36,13 @@ func (h handler) PostOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if isValid := h.service.ValidateOrderID(string(body)); !isValid {
+	if isValid := h.orderService.ValidateOrderID(string(body)); !isValid {
 		h.log.Info(fmt.Sprintf("%s: invalid order id received", fn), "orderID", string(body))
 		h.writeResponseWithError(w, http.StatusUnprocessableEntity, orderIDIsInvalid)
 		return
 	}
 
-	err = h.service.ProcessNewOrder(r.Context(), userID, string(body))
+	err = h.orderService.ProcessNewOrder(r.Context(), userID, string(body))
 	if err != nil {
 		switch {
 		case errors.Is(err, service.ErrOrderConflict):

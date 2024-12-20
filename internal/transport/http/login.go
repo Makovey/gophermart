@@ -38,7 +38,7 @@ func (h handler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := h.service.LoginUser(r.Context(), reqModel)
+	token, err := h.userService.LoginUser(r.Context(), reqModel)
 	if err != nil {
 		switch {
 		case errors.Is(err, service.ErrExecStmt):

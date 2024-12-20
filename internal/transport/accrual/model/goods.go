@@ -1,5 +1,7 @@
 package model
 
+import "github.com/Makovey/gophermart/internal/types"
+
 type RewardType string
 
 const (
@@ -8,7 +10,7 @@ const (
 )
 
 type Goods struct {
-	Match      string     `json:"match"`
-	Reward     float64    `json:"reward"`
-	RewardType RewardType `json:"reward_type"`
+	Match      string             `json:"match"`
+	Reward     types.FloatDecimal `json:"reward"`
+	RewardType RewardType         `json:"reward_type"`
 }

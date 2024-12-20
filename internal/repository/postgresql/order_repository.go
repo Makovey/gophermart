@@ -18,7 +18,7 @@ type orderRepository struct {
 	pool *pgxpool.Pool
 }
 
-func NewOrderRepository(log logger.Logger, pool *pgxpool.Pool) service.OrderRepository {
+func newOrderRepository(log logger.Logger, pool *pgxpool.Pool) service.OrderRepository {
 	return &orderRepository{
 		log:  log,
 		pool: pool,

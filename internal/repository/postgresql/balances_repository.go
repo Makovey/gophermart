@@ -2,13 +2,16 @@ package postgresql
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/shopspring/decimal"
 
 	"github.com/Makovey/gophermart/internal/logger"
+	"github.com/Makovey/gophermart/internal/repository/model"
 	"github.com/Makovey/gophermart/internal/service"
 )
 
@@ -17,7 +20,7 @@ type balancesRepository struct {
 	pool *pgxpool.Pool
 }
 
-func NewBalancesRepository(log logger.Logger, pool *pgxpool.Pool) service.BalancesRepository {
+func newBalancesRepository(log logger.Logger, pool *pgxpool.Pool) service.BalancesRepository {
 	return &balancesRepository{
 		log:  log,
 		pool: pool,
@@ -41,4 +44,27 @@ func (b *balancesRepository) UpdateUsersBalance(ctx context.Context, userID stri
 	}
 
 	return nil
+}
+
+func (b *balancesRepository) GetUsersBalance(ctx context.Context, userID string) (model.Balance, error) {
+	fn := "postgresql.GetUsersBalance"
+
+	row := b.pool.QueryRow(
+		ctx,
+		`SELECT accrual, withdrawn FROM gophermart_balances WHERE owner_user_id = $1`,
+		userID,
+	)
+	var balance model.Balance
+	err := row.Scan(&balance.Accrual, &balance.Withdrawn)
+	if err != nil {
+		switch {
+		case errors.Is(err, pgx.ErrNoRows):
+			return model.Balance{}, nil
+		default:
+			b.log.Error(fmt.Sprintf("%s: failed to query users balance", fn), "error", err)
+			return model.Balance{}, service.ErrExecStmt
+		}
+	}
+
+	return balance, nil
 }

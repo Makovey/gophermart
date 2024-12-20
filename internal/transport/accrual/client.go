@@ -10,9 +10,12 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/shopspring/decimal"
+
 	"github.com/Makovey/gophermart/internal/config"
 	"github.com/Makovey/gophermart/internal/logger"
 	"github.com/Makovey/gophermart/internal/transport/accrual/model"
+	"github.com/Makovey/gophermart/internal/types"
 )
 
 const (
@@ -186,8 +189,12 @@ func randomBrand() string {
 	return brands[rand.Intn(len(brands))]
 }
 
-func randomReward() float64 {
-	var rewards = []float64{5, 10, 20}
+func randomReward() types.FloatDecimal {
+	var rewards = []types.FloatDecimal{
+		types.FloatDecimal(decimal.NewFromFloat(10)),
+		types.FloatDecimal(decimal.NewFromFloat(20)),
+		types.FloatDecimal(decimal.NewFromFloat(30)),
+	}
 	return rewards[rand.Intn(len(rewards))]
 }
 
@@ -196,7 +203,11 @@ func randomProductType() string {
 	return productTypes[rand.Intn(len(productTypes))]
 }
 
-func randomPrice() float64 {
-	var price = []float64{300, 600, 1200, 3000}
-	return price[rand.Intn(len(price))]
+func randomPrice() types.FloatDecimal {
+	var prices = []types.FloatDecimal{
+		types.FloatDecimal(decimal.NewFromFloat(50.99)),
+		types.FloatDecimal(decimal.NewFromFloat(70.99)),
+		types.FloatDecimal(decimal.NewFromFloat(99.99)),
+	}
+	return prices[rand.Intn(len(prices))]
 }
