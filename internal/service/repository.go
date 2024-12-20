@@ -13,6 +13,7 @@ type GophermartRepository interface {
 	UserRepository
 	OrderRepository
 	BalancesRepository
+	HistoryRepository
 }
 
 type UserRepository interface {
@@ -29,6 +30,11 @@ type OrderRepository interface {
 }
 
 type BalancesRepository interface {
-	UpdateUsersBalance(ctx context.Context, userID string, reward decimal.Decimal) error
+	IncreaseUsersBalance(ctx context.Context, userID string, reward decimal.Decimal) error
+	DecreaseUsersBalance(ctx context.Context, userID string, withdraw decimal.Decimal) error
 	GetUsersBalance(ctx context.Context, userID string) (model.Balance, error)
+}
+
+type HistoryRepository interface {
+	RecordUsersWithdraw(ctx context.Context, userID, orderID string, amount decimal.Decimal) error
 }

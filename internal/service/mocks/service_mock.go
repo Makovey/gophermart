@@ -123,6 +123,20 @@ func (mr *MockGophermartServiceMockRecorder) ValidateOrderID(orderID interface{}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidateOrderID", reflect.TypeOf((*MockGophermartService)(nil).ValidateOrderID), orderID)
 }
 
+// WithdrawBalance mocks base method.
+func (m *MockGophermartService) WithdrawBalance(ctx context.Context, userID string, withdraw model.WithdrawRequest) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "WithdrawBalance", ctx, userID, withdraw)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// WithdrawBalance indicates an expected call of WithdrawBalance.
+func (mr *MockGophermartServiceMockRecorder) WithdrawBalance(ctx, userID, withdraw interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WithdrawBalance", reflect.TypeOf((*MockGophermartService)(nil).WithdrawBalance), ctx, userID, withdraw)
+}
+
 // MockUserService is a mock of UserService interface.
 type MockUserService struct {
 	ctrl     *gomock.Controller
@@ -278,4 +292,18 @@ func (m *MockBalanceService) GetUsersBalance(ctx context.Context, userID string)
 func (mr *MockBalanceServiceMockRecorder) GetUsersBalance(ctx, userID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUsersBalance", reflect.TypeOf((*MockBalanceService)(nil).GetUsersBalance), ctx, userID)
+}
+
+// WithdrawBalance mocks base method.
+func (m *MockBalanceService) WithdrawBalance(ctx context.Context, userID string, withdraw model.WithdrawRequest) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "WithdrawBalance", ctx, userID, withdraw)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// WithdrawBalance indicates an expected call of WithdrawBalance.
+func (mr *MockBalanceServiceMockRecorder) WithdrawBalance(ctx, userID, withdraw interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WithdrawBalance", reflect.TypeOf((*MockBalanceService)(nil).WithdrawBalance), ctx, userID, withdraw)
 }

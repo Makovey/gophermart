@@ -118,7 +118,7 @@ func (w *worker) updateOrderInfo(ctx context.Context, status model.OrderStatus, 
 		w.log.Error(fmt.Sprintf("%s: failed to update order info", fn), "error", err)
 	}
 
-	err = w.balanceRepo.UpdateUsersBalance(ctx, userID, status.Accrual)
+	err = w.balanceRepo.IncreaseUsersBalance(ctx, userID, status.Accrual)
 	if err != nil {
 		w.log.Error(fmt.Sprintf("%s: failed to update users balance", fn), "error", err)
 	}

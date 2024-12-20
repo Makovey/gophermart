@@ -26,4 +26,5 @@ type OrderService interface {
 
 type BalanceService interface {
 	GetUsersBalance(ctx context.Context, userID string) (model.BalanceResponse, error)
+	WithdrawBalance(ctx context.Context, userID string, withdraw model.WithdrawRequest) error
 }

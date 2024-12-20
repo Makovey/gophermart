@@ -56,3 +56,7 @@ func (s *serv) GetOrders(ctx context.Context, userID string) ([]model.OrderRespo
 func (s *serv) GetUsersBalance(ctx context.Context, userID string) (model.BalanceResponse, error) {
 	return s.balanceServ.GetUsersBalance(ctx, userID)
 }
+
+func (s *serv) WithdrawBalance(ctx context.Context, userID string, withdrawModel model.WithdrawRequest) error {
+	return s.balanceServ.WithdrawBalance(ctx, userID, withdrawModel)
+}

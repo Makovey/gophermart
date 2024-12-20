@@ -10,4 +10,5 @@ var (
 	ErrNotFound            = errors.New("not found data in database")
 	ErrOrderConflict       = errors.New("order belongs to another user")
 	ErrOrderAlreadyPosted  = errors.New("order already posted")
+	ErrNotEnoughFounds     = errors.New("not enough founds")
 )

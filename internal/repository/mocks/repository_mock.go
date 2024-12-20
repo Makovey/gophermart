@@ -36,6 +36,20 @@ func (m *MockGophermartRepository) EXPECT() *MockGophermartRepositoryMockRecorde
 	return m.recorder
 }
 
+// DecreaseUsersBalance mocks base method.
+func (m *MockGophermartRepository) DecreaseUsersBalance(ctx context.Context, userID string, withdraw decimal.Decimal) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DecreaseUsersBalance", ctx, userID, withdraw)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DecreaseUsersBalance indicates an expected call of DecreaseUsersBalance.
+func (mr *MockGophermartRepositoryMockRecorder) DecreaseUsersBalance(ctx, userID, withdraw interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DecreaseUsersBalance", reflect.TypeOf((*MockGophermartRepository)(nil).DecreaseUsersBalance), ctx, userID, withdraw)
+}
+
 // FetchNewOrdersToChan mocks base method.
 func (m *MockGophermartRepository) FetchNewOrdersToChan(ctx context.Context, ordersCh chan<- model.Order) error {
 	m.ctrl.T.Helper()
@@ -95,6 +109,20 @@ func (mr *MockGophermartRepositoryMockRecorder) GetUsersBalance(ctx, userID inte
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUsersBalance", reflect.TypeOf((*MockGophermartRepository)(nil).GetUsersBalance), ctx, userID)
 }
 
+// IncreaseUsersBalance mocks base method.
+func (m *MockGophermartRepository) IncreaseUsersBalance(ctx context.Context, userID string, reward decimal.Decimal) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "IncreaseUsersBalance", ctx, userID, reward)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// IncreaseUsersBalance indicates an expected call of IncreaseUsersBalance.
+func (mr *MockGophermartRepositoryMockRecorder) IncreaseUsersBalance(ctx, userID, reward interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IncreaseUsersBalance", reflect.TypeOf((*MockGophermartRepository)(nil).IncreaseUsersBalance), ctx, userID, reward)
+}
+
 // LoginUser mocks base method.
 func (m *MockGophermartRepository) LoginUser(ctx context.Context, login string) (model.RegisterUser, error) {
 	m.ctrl.T.Helper()
@@ -124,6 +152,20 @@ func (mr *MockGophermartRepositoryMockRecorder) PostNewOrder(ctx, orderID, userI
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PostNewOrder", reflect.TypeOf((*MockGophermartRepository)(nil).PostNewOrder), ctx, orderID, userID)
 }
 
+// RecordUsersWithdraw mocks base method.
+func (m *MockGophermartRepository) RecordUsersWithdraw(ctx context.Context, userID, orderID string, amount decimal.Decimal) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RecordUsersWithdraw", ctx, userID, orderID, amount)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RecordUsersWithdraw indicates an expected call of RecordUsersWithdraw.
+func (mr *MockGophermartRepositoryMockRecorder) RecordUsersWithdraw(ctx, userID, orderID, amount interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RecordUsersWithdraw", reflect.TypeOf((*MockGophermartRepository)(nil).RecordUsersWithdraw), ctx, userID, orderID, amount)
+}
+
 // RegisterNewUser mocks base method.
 func (m *MockGophermartRepository) RegisterNewUser(ctx context.Context, user model.RegisterUser) error {
 	m.ctrl.T.Helper()
@@ -150,20 +192,6 @@ func (m *MockGophermartRepository) UpdateOrder(ctx context.Context, status model
 func (mr *MockGophermartRepositoryMockRecorder) UpdateOrder(ctx, status interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateOrder", reflect.TypeOf((*MockGophermartRepository)(nil).UpdateOrder), ctx, status)
-}
-
-// UpdateUsersBalance mocks base method.
-func (m *MockGophermartRepository) UpdateUsersBalance(ctx context.Context, userID string, reward decimal.Decimal) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateUsersBalance", ctx, userID, reward)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// UpdateUsersBalance indicates an expected call of UpdateUsersBalance.
-func (mr *MockGophermartRepositoryMockRecorder) UpdateUsersBalance(ctx, userID, reward interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUsersBalance", reflect.TypeOf((*MockGophermartRepository)(nil).UpdateUsersBalance), ctx, userID, reward)
 }
 
 // MockUserRepository is a mock of UserRepository interface.
@@ -336,6 +364,20 @@ func (m *MockBalancesRepository) EXPECT() *MockBalancesRepositoryMockRecorder {
 	return m.recorder
 }
 
+// DecreaseUsersBalance mocks base method.
+func (m *MockBalancesRepository) DecreaseUsersBalance(ctx context.Context, userID string, withdraw decimal.Decimal) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DecreaseUsersBalance", ctx, userID, withdraw)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DecreaseUsersBalance indicates an expected call of DecreaseUsersBalance.
+func (mr *MockBalancesRepositoryMockRecorder) DecreaseUsersBalance(ctx, userID, withdraw interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DecreaseUsersBalance", reflect.TypeOf((*MockBalancesRepository)(nil).DecreaseUsersBalance), ctx, userID, withdraw)
+}
+
 // GetUsersBalance mocks base method.
 func (m *MockBalancesRepository) GetUsersBalance(ctx context.Context, userID string) (model.Balance, error) {
 	m.ctrl.T.Helper()
@@ -351,16 +393,53 @@ func (mr *MockBalancesRepositoryMockRecorder) GetUsersBalance(ctx, userID interf
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUsersBalance", reflect.TypeOf((*MockBalancesRepository)(nil).GetUsersBalance), ctx, userID)
 }
 
-// UpdateUsersBalance mocks base method.
-func (m *MockBalancesRepository) UpdateUsersBalance(ctx context.Context, userID string, reward decimal.Decimal) error {
+// IncreaseUsersBalance mocks base method.
+func (m *MockBalancesRepository) IncreaseUsersBalance(ctx context.Context, userID string, reward decimal.Decimal) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateUsersBalance", ctx, userID, reward)
+	ret := m.ctrl.Call(m, "IncreaseUsersBalance", ctx, userID, reward)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// UpdateUsersBalance indicates an expected call of UpdateUsersBalance.
-func (mr *MockBalancesRepositoryMockRecorder) UpdateUsersBalance(ctx, userID, reward interface{}) *gomock.Call {
+// IncreaseUsersBalance indicates an expected call of IncreaseUsersBalance.
+func (mr *MockBalancesRepositoryMockRecorder) IncreaseUsersBalance(ctx, userID, reward interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUsersBalance", reflect.TypeOf((*MockBalancesRepository)(nil).UpdateUsersBalance), ctx, userID, reward)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IncreaseUsersBalance", reflect.TypeOf((*MockBalancesRepository)(nil).IncreaseUsersBalance), ctx, userID, reward)
+}
+
+// MockHistoryRepository is a mock of HistoryRepository interface.
+type MockHistoryRepository struct {
+	ctrl     *gomock.Controller
+	recorder *MockHistoryRepositoryMockRecorder
+}
+
+// MockHistoryRepositoryMockRecorder is the mock recorder for MockHistoryRepository.
+type MockHistoryRepositoryMockRecorder struct {
+	mock *MockHistoryRepository
+}
+
+// NewMockHistoryRepository creates a new mock instance.
+func NewMockHistoryRepository(ctrl *gomock.Controller) *MockHistoryRepository {
+	mock := &MockHistoryRepository{ctrl: ctrl}
+	mock.recorder = &MockHistoryRepositoryMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockHistoryRepository) EXPECT() *MockHistoryRepositoryMockRecorder {
+	return m.recorder
+}
+
+// RecordUsersWithdraw mocks base method.
+func (m *MockHistoryRepository) RecordUsersWithdraw(ctx context.Context, userID, orderID string, amount decimal.Decimal) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RecordUsersWithdraw", ctx, userID, orderID, amount)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RecordUsersWithdraw indicates an expected call of RecordUsersWithdraw.
+func (mr *MockHistoryRepositoryMockRecorder) RecordUsersWithdraw(ctx, userID, orderID, amount interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RecordUsersWithdraw", reflect.TypeOf((*MockHistoryRepository)(nil).RecordUsersWithdraw), ctx, userID, orderID, amount)
 }

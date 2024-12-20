@@ -10,4 +10,5 @@ type HTTPHandler interface {
 	GetOrders(w http.ResponseWriter, r *http.Request)
 
 	GetBalance(w http.ResponseWriter, r *http.Request)
+	PostWithdraw(w http.ResponseWriter, r *http.Request)
 }
