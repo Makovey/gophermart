@@ -109,6 +109,21 @@ func (mr *MockGophermartRepositoryMockRecorder) GetUsersBalance(ctx, userID inte
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUsersBalance", reflect.TypeOf((*MockGophermartRepository)(nil).GetUsersBalance), ctx, userID)
 }
 
+// GetUsersHistory mocks base method.
+func (m *MockGophermartRepository) GetUsersHistory(ctx context.Context, userID string) ([]model.Withdraw, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUsersHistory", ctx, userID)
+	ret0, _ := ret[0].([]model.Withdraw)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetUsersHistory indicates an expected call of GetUsersHistory.
+func (mr *MockGophermartRepositoryMockRecorder) GetUsersHistory(ctx, userID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUsersHistory", reflect.TypeOf((*MockGophermartRepository)(nil).GetUsersHistory), ctx, userID)
+}
+
 // IncreaseUsersBalance mocks base method.
 func (m *MockGophermartRepository) IncreaseUsersBalance(ctx context.Context, userID string, reward decimal.Decimal) error {
 	m.ctrl.T.Helper()
@@ -428,6 +443,21 @@ func NewMockHistoryRepository(ctrl *gomock.Controller) *MockHistoryRepository {
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockHistoryRepository) EXPECT() *MockHistoryRepositoryMockRecorder {
 	return m.recorder
+}
+
+// GetUsersHistory mocks base method.
+func (m *MockHistoryRepository) GetUsersHistory(ctx context.Context, userID string) ([]model.Withdraw, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUsersHistory", ctx, userID)
+	ret0, _ := ret[0].([]model.Withdraw)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetUsersHistory indicates an expected call of GetUsersHistory.
+func (mr *MockHistoryRepositoryMockRecorder) GetUsersHistory(ctx, userID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUsersHistory", reflect.TypeOf((*MockHistoryRepository)(nil).GetUsersHistory), ctx, userID)
 }
 
 // RecordUsersWithdraw mocks base method.

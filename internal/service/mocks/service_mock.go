@@ -65,6 +65,21 @@ func (mr *MockGophermartServiceMockRecorder) GetUsersBalance(ctx, userID interfa
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUsersBalance", reflect.TypeOf((*MockGophermartService)(nil).GetUsersBalance), ctx, userID)
 }
 
+// GetUsersWithdrawHistory mocks base method.
+func (m *MockGophermartService) GetUsersWithdrawHistory(ctx context.Context, userID string) ([]model.WithdrawHistoryResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUsersWithdrawHistory", ctx, userID)
+	ret0, _ := ret[0].([]model.WithdrawHistoryResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetUsersWithdrawHistory indicates an expected call of GetUsersWithdrawHistory.
+func (mr *MockGophermartServiceMockRecorder) GetUsersWithdrawHistory(ctx, userID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUsersWithdrawHistory", reflect.TypeOf((*MockGophermartService)(nil).GetUsersWithdrawHistory), ctx, userID)
+}
+
 // LoginUser mocks base method.
 func (m *MockGophermartService) LoginUser(ctx context.Context, request model.AuthRequest) (string, error) {
 	m.ctrl.T.Helper()
@@ -123,18 +138,18 @@ func (mr *MockGophermartServiceMockRecorder) ValidateOrderID(orderID interface{}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidateOrderID", reflect.TypeOf((*MockGophermartService)(nil).ValidateOrderID), orderID)
 }
 
-// WithdrawBalance mocks base method.
-func (m *MockGophermartService) WithdrawBalance(ctx context.Context, userID string, withdraw model.WithdrawRequest) error {
+// WithdrawUsersBalance mocks base method.
+func (m *MockGophermartService) WithdrawUsersBalance(ctx context.Context, userID string, withdraw model.WithdrawRequest) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "WithdrawBalance", ctx, userID, withdraw)
+	ret := m.ctrl.Call(m, "WithdrawUsersBalance", ctx, userID, withdraw)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// WithdrawBalance indicates an expected call of WithdrawBalance.
-func (mr *MockGophermartServiceMockRecorder) WithdrawBalance(ctx, userID, withdraw interface{}) *gomock.Call {
+// WithdrawUsersBalance indicates an expected call of WithdrawUsersBalance.
+func (mr *MockGophermartServiceMockRecorder) WithdrawUsersBalance(ctx, userID, withdraw interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WithdrawBalance", reflect.TypeOf((*MockGophermartService)(nil).WithdrawBalance), ctx, userID, withdraw)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WithdrawUsersBalance", reflect.TypeOf((*MockGophermartService)(nil).WithdrawUsersBalance), ctx, userID, withdraw)
 }
 
 // MockUserService is a mock of UserService interface.
@@ -294,16 +309,54 @@ func (mr *MockBalanceServiceMockRecorder) GetUsersBalance(ctx, userID interface{
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUsersBalance", reflect.TypeOf((*MockBalanceService)(nil).GetUsersBalance), ctx, userID)
 }
 
-// WithdrawBalance mocks base method.
-func (m *MockBalanceService) WithdrawBalance(ctx context.Context, userID string, withdraw model.WithdrawRequest) error {
+// WithdrawUsersBalance mocks base method.
+func (m *MockBalanceService) WithdrawUsersBalance(ctx context.Context, userID string, withdraw model.WithdrawRequest) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "WithdrawBalance", ctx, userID, withdraw)
+	ret := m.ctrl.Call(m, "WithdrawUsersBalance", ctx, userID, withdraw)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// WithdrawBalance indicates an expected call of WithdrawBalance.
-func (mr *MockBalanceServiceMockRecorder) WithdrawBalance(ctx, userID, withdraw interface{}) *gomock.Call {
+// WithdrawUsersBalance indicates an expected call of WithdrawUsersBalance.
+func (mr *MockBalanceServiceMockRecorder) WithdrawUsersBalance(ctx, userID, withdraw interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WithdrawBalance", reflect.TypeOf((*MockBalanceService)(nil).WithdrawBalance), ctx, userID, withdraw)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WithdrawUsersBalance", reflect.TypeOf((*MockBalanceService)(nil).WithdrawUsersBalance), ctx, userID, withdraw)
+}
+
+// MockHistoryService is a mock of HistoryService interface.
+type MockHistoryService struct {
+	ctrl     *gomock.Controller
+	recorder *MockHistoryServiceMockRecorder
+}
+
+// MockHistoryServiceMockRecorder is the mock recorder for MockHistoryService.
+type MockHistoryServiceMockRecorder struct {
+	mock *MockHistoryService
+}
+
+// NewMockHistoryService creates a new mock instance.
+func NewMockHistoryService(ctrl *gomock.Controller) *MockHistoryService {
+	mock := &MockHistoryService{ctrl: ctrl}
+	mock.recorder = &MockHistoryServiceMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockHistoryService) EXPECT() *MockHistoryServiceMockRecorder {
+	return m.recorder
+}
+
+// GetUsersWithdrawHistory mocks base method.
+func (m *MockHistoryService) GetUsersWithdrawHistory(ctx context.Context, userID string) ([]model.WithdrawHistoryResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUsersWithdrawHistory", ctx, userID)
+	ret0, _ := ret[0].([]model.WithdrawHistoryResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetUsersWithdrawHistory indicates an expected call of GetUsersWithdrawHistory.
+func (mr *MockHistoryServiceMockRecorder) GetUsersWithdrawHistory(ctx, userID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUsersWithdrawHistory", reflect.TypeOf((*MockHistoryService)(nil).GetUsersWithdrawHistory), ctx, userID)
 }

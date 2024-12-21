@@ -37,7 +37,7 @@ func (b *balanceService) GetUsersBalance(ctx context.Context, userID string) (mo
 	}, nil
 }
 
-func (b *balanceService) WithdrawBalance(ctx context.Context, userID string, withdrawModel model.WithdrawRequest) error {
+func (b *balanceService) WithdrawUsersBalance(ctx context.Context, userID string, withdrawModel model.WithdrawRequest) error {
 	order, err := b.orderRepo.GetOrderByID(ctx, withdrawModel.Order)
 	if err != nil {
 		return err

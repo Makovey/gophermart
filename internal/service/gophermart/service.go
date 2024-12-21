@@ -54,8 +54,8 @@ func (s *serv) GetUsersBalance(ctx context.Context, userID string) (model.Balanc
 	return s.balanceServ.GetUsersBalance(ctx, userID)
 }
 
-func (s *serv) WithdrawBalance(ctx context.Context, userID string, withdrawModel model.WithdrawRequest) error {
-	return s.balanceServ.WithdrawBalance(ctx, userID, withdrawModel)
+func (s *serv) WithdrawUsersBalance(ctx context.Context, userID string, withdrawModel model.WithdrawRequest) error {
+	return s.balanceServ.WithdrawUsersBalance(ctx, userID, withdrawModel)
 }
 
 func (s *serv) GetUsersWithdrawHistory(ctx context.Context, userID string) ([]model.WithdrawHistoryResponse, error) {
