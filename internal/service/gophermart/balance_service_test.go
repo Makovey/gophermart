@@ -3,19 +3,19 @@ package gophermart
 import (
 	"context"
 	"errors"
-	"github.com/Makovey/gophermart/internal/service"
 	"testing"
 
+	"github.com/golang/mock/gomock"
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/Makovey/gophermart/internal/logger/dummy"
 	"github.com/Makovey/gophermart/internal/repository/mocks"
 	repoModel "github.com/Makovey/gophermart/internal/repository/model"
+	"github.com/Makovey/gophermart/internal/service"
 	"github.com/Makovey/gophermart/internal/transport/http/model"
 	"github.com/Makovey/gophermart/internal/types"
 	"github.com/Makovey/gophermart/pkg/jwt"
-	"github.com/golang/mock/gomock"
 )
 
 func TestBalanceServiceGetUsersBalance(t *testing.T) {
