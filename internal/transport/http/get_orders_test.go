@@ -76,9 +76,7 @@ func TestGetOrdersHandler(t *testing.T) {
 			expects: expects{
 				orders: generateModels(0),
 			},
-			params: params{
-				authToken: "",
-			},
+			params: params{},
 		},
 		{
 			name: "failed getting orders with service error",

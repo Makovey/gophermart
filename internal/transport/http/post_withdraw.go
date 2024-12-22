@@ -7,6 +7,8 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/go-playground/validator/v10"
+
 	"github.com/Makovey/gophermart/internal/service"
 	"github.com/Makovey/gophermart/internal/transport/http/model"
 )
@@ -35,7 +37,15 @@ func (h handler) PostWithdraw(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	validate := validator.New()
+	if err = validate.Struct(reqModel); err != nil {
+		h.log.Error(fmt.Sprintf("%s: request body is incorrect", fn), "error", err.Error())
+		h.writeResponseWithError(w, http.StatusBadRequest, badRequestError)
+		return
+	}
+
 	err = h.balanceService.WithdrawUsersBalance(r.Context(), userID, reqModel)
+	fmt.Println(err)
 	if err != nil {
 		switch {
 		case errors.Is(err, service.ErrOrderConflict),

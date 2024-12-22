@@ -5,6 +5,6 @@ import (
 )
 
 type WithdrawRequest struct {
-	Order string          `json:"order"`
-	Sum   decimal.Decimal `json:"sum"`
+	Order string          `json:"order" validate:"required"`
+	Sum   decimal.Decimal `json:"sum" validate:"required"`
 }

@@ -45,7 +45,6 @@ func TestLoginHandler(t *testing.T) {
 			},
 			expects: expects{
 				expectServiceCall: true,
-				serviceError:      nil,
 			},
 			params: params{
 				body: strings.NewReader(makeJSON(map[string]any{
@@ -59,10 +58,7 @@ func TestLoginHandler(t *testing.T) {
 			want: want{
 				code: http.StatusBadRequest,
 			},
-			expects: expects{
-				expectServiceCall: false,
-				serviceError:      nil,
-			},
+			expects: expects{},
 			params: params{
 				body: errReader(0),
 			},
@@ -72,10 +68,7 @@ func TestLoginHandler(t *testing.T) {
 			want: want{
 				code: http.StatusBadRequest,
 			},
-			expects: expects{
-				expectServiceCall: false,
-				serviceError:      nil,
-			},
+			expects: expects{},
 			params: params{
 				body: strings.NewReader(makeJSON(map[string]any{})),
 			},
@@ -85,10 +78,7 @@ func TestLoginHandler(t *testing.T) {
 			want: want{
 				code: http.StatusBadRequest,
 			},
-			expects: expects{
-				expectServiceCall: false,
-				serviceError:      nil,
-			},
+			expects: expects{},
 			params: params{
 				body: strings.NewReader(makeJSON(map[string]any{
 					"login":    strings.Repeat("l", 31),

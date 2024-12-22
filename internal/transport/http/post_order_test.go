@@ -64,8 +64,7 @@ func TestPostOrderHandler(t *testing.T) {
 			},
 			expects: expects{},
 			params: params{
-				body:      strings.NewReader("12345678903"),
-				authToken: "",
+				body: strings.NewReader("12345678903"),
 			},
 		},
 		{
@@ -73,9 +72,7 @@ func TestPostOrderHandler(t *testing.T) {
 			want: want{
 				code: http.StatusBadRequest,
 			},
-			expects: expects{
-				processCall: false,
-			},
+			expects: expects{},
 			params: params{
 				body:      errReader(0),
 				authToken: uuid.NewString()[:gophermart.UserIDLength],
@@ -86,9 +83,7 @@ func TestPostOrderHandler(t *testing.T) {
 			want: want{
 				code: http.StatusBadRequest,
 			},
-			expects: expects{
-				isBodyValid: false,
-			},
+			expects: expects{},
 			params: params{
 				body:      strings.NewReader(""),
 				authToken: uuid.NewString()[:gophermart.UserIDLength],
@@ -101,7 +96,6 @@ func TestPostOrderHandler(t *testing.T) {
 			},
 			expects: expects{
 				validateCall: true,
-				isBodyValid:  false,
 			},
 			params: params{
 				body:      strings.NewReader("1221"),

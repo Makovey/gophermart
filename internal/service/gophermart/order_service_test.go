@@ -172,7 +172,7 @@ func TestGetOrders(t *testing.T) {
 			name:    "get orders: repo error",
 			want:    want{resultLen: 0},
 			param:   params{userID: "12345"},
-			expects: expects{repoResult: nil, repoError: errors.New("err")},
+			expects: expects{repoError: errors.New("err")},
 		},
 	}
 
