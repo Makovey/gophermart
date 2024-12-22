@@ -13,8 +13,8 @@ import (
 	"github.com/Makovey/gophermart/internal/transport/http/model"
 )
 
-func (h handler) Login(w http.ResponseWriter, r *http.Request) {
-	fn := "http.Login"
+func (h handler) LoginUser(w http.ResponseWriter, r *http.Request) {
+	fn := "http.LoginUser"
 
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -33,7 +33,7 @@ func (h handler) Login(w http.ResponseWriter, r *http.Request) {
 
 	validate := validator.New()
 	if err = validate.Struct(reqModel); err != nil {
-		h.log.Info(fmt.Sprintf("%s: login or password is empty or greater than 30 symbols", fn), "error", err.Error())
+		h.log.Info(fmt.Sprintf("%s: login or password is too long", fn), "error", err.Error())
 		h.writeResponseWithError(w, http.StatusBadRequest, loginOrPasswordIsEmpty)
 		return
 	}

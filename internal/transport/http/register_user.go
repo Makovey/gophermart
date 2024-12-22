@@ -19,8 +19,8 @@ const (
 	loginOrPasswordIsEmpty = "login or password is empty, or greater than 30 symbols"
 )
 
-func (h handler) Register(w http.ResponseWriter, r *http.Request) {
-	fn := "http.Register"
+func (h handler) RegisterUser(w http.ResponseWriter, r *http.Request) {
+	fn := "http.RegisterUser"
 
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -39,7 +39,7 @@ func (h handler) Register(w http.ResponseWriter, r *http.Request) {
 
 	validate := validator.New()
 	if err = validate.Struct(reqModel); err != nil {
-		h.log.Error(fmt.Sprintf("%s: login or password is empty or greater than 30 symbols", fn), "error", err.Error())
+		h.log.Error(fmt.Sprintf("%s: login or password is too long", fn), "error", err.Error())
 		h.writeResponseWithError(w, http.StatusBadRequest, loginOrPasswordIsEmpty)
 		return
 	}

@@ -15,8 +15,8 @@ func (a *App) initRouter() http.Handler {
 	r.Use(chiMiddleware.Recoverer)
 	r.Use(middleware.NewCompressor().Compress)
 
-	r.Post("/api/user/register", a.deps.Handler().Register)
-	r.Post("/api/user/login", a.deps.Handler().Login)
+	r.Post("/api/user/register", a.deps.Handler().RegisterUser)
+	r.Post("/api/user/login", a.deps.Handler().LoginUser)
 
 	r.Group(func(r chi.Router) {
 		authMiddleware := middleware.NewAuth(a.deps.JWT(), a.deps.Logger())

@@ -45,7 +45,6 @@ func (h handler) PostWithdraw(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = h.balanceService.WithdrawUsersBalance(r.Context(), userID, reqModel)
-	fmt.Println(err)
 	if err != nil {
 		switch {
 		case errors.Is(err, service.ErrOrderConflict),

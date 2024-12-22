@@ -32,7 +32,7 @@ func NewWorker(
 		orderRepo:   repo,
 		balanceRepo: repo,
 		client:      client,
-		ticker:      time.NewTicker(time.Second * 30),
+		ticker:      time.NewTicker(time.Second * 1),
 		log:         log,
 		quit:        make(chan bool),
 	}
