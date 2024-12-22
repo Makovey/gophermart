@@ -181,7 +181,7 @@ func (c *HTTPClient) UpdateOrderStatus(ctx context.Context, orderID string) (mod
 }
 
 func (c *HTTPClient) baseURL() string {
-	return "http://localhost" + c.cfg.AccrualAddress()
+	return c.cfg.AccrualAddress()
 }
 
 func randomBrand() string {
