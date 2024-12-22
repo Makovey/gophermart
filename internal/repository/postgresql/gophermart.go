@@ -2,14 +2,22 @@ package postgresql
 
 import (
 	"context"
+	"database/sql"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	_ "github.com/jackc/pgx/v5/stdlib"
+	"github.com/pressly/goose/v3"
 	"github.com/shopspring/decimal"
+	"path/filepath"
 
 	"github.com/Makovey/gophermart/internal/config"
 	"github.com/Makovey/gophermart/internal/logger"
 	"github.com/Makovey/gophermart/internal/repository/model"
 	"github.com/Makovey/gophermart/internal/service"
+)
+
+const (
+	migrationPath = "internal/db/migrations"
 )
 
 type repo struct {
@@ -23,6 +31,12 @@ type repo struct {
 }
 
 func NewPostgresRepo(log logger.Logger, cfg config.Config) service.GophermartRepository {
+	path, err := filepath.Abs(migrationPath)
+	if err != nil {
+		panic(err)
+	}
+
+	mustUpMigrations(cfg.DatabaseURI(), path)
 	conn, err := pgxpool.New(context.Background(), cfg.DatabaseURI())
 	if err != nil {
 		log.Error("unable to connect to database", "error", err.Error())
@@ -36,6 +50,18 @@ func NewPostgresRepo(log logger.Logger, cfg config.Config) service.GophermartRep
 		orderRepo:         newOrderRepository(log, conn),
 		balancesRepo:      newBalancesRepository(log, conn),
 		historyRepository: newHistoryRepository(log, conn),
+	}
+}
+
+func mustUpMigrations(databaseURI, migrationsDir string) {
+	db, err := sql.Open("pgx", databaseURI)
+	if err != nil {
+		panic(err)
+	}
+	defer db.Close()
+
+	if err = goose.Up(db, migrationsDir); err != nil {
+		panic(err)
 	}
 }
 
