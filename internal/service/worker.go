@@ -1,6 +1,8 @@
 package service
 
+import "context"
+
 type Worker interface {
-	ProcessNewOrders()
+	ProcessNewOrders(ctx context.Context)
 	DownProcess()
 }

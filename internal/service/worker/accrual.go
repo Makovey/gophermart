@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/Makovey/gophermart/internal/logger"
@@ -20,6 +21,7 @@ type worker struct {
 	client      transport.Accrual
 	ticker      *time.Ticker
 	log         logger.Logger
+	wg          *sync.WaitGroup
 }
 
 func NewWorker(
@@ -33,17 +35,16 @@ func NewWorker(
 		client:      client,
 		ticker:      time.NewTicker(time.Second * 1),
 		log:         log,
+		wg:          &sync.WaitGroup{},
 	}
 }
 
-func (w *worker) ProcessNewOrders() {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
+func (w *worker) ProcessNewOrders(ctx context.Context) {
 	orders := make(chan repoModel.Order, 5)
 	w.registerNewGoods(ctx)
-	w.runFetchingProcess(ctx, orders)
-	w.runUpdatingProcess(ctx, orders)
+	go w.runFetchingProcess(ctx, orders)
+	go w.runUpdatingProcess(ctx, orders)
+	w.wg.Wait()
 }
 
 func (w *worker) runFetchingProcess(
@@ -51,21 +52,22 @@ func (w *worker) runFetchingProcess(
 	orders chan<- repoModel.Order,
 ) {
 	fn := "worker.runFetchingProcess"
+	w.wg.Add(1)
+	defer w.wg.Done()
 
-	go func() {
-		for {
-			select {
-			case <-w.ticker.C:
-				err := w.orderRepo.FetchNewOrdersToChan(ctx, orders)
-				if err != nil {
-					w.log.Error(fmt.Sprintf("%s: failed to fetch new orders", fn))
-				}
-			case <-ctx.Done():
-				close(orders)
-				return
+	for {
+		select {
+		case <-w.ticker.C:
+			err := w.orderRepo.FetchNewOrdersToChan(ctx, orders)
+			if err != nil {
+				w.log.Error(fmt.Sprintf("%s: failed to fetch new orders", fn))
 			}
+		case <-ctx.Done():
+			w.log.Debug(fmt.Sprintf("%s: stopping fetching process, context is closed", fn))
+			close(orders)
+			return
 		}
-	}()
+	}
 }
 
 func (w *worker) registerNewGoods(ctx context.Context) {
@@ -78,6 +80,8 @@ func (w *worker) registerNewGoods(ctx context.Context) {
 
 func (w *worker) runUpdatingProcess(ctx context.Context, orders <-chan repoModel.Order) {
 	fn := "worker.runUpdatingProcess"
+	w.wg.Add(1)
+	defer w.wg.Done()
 
 	for {
 		select {

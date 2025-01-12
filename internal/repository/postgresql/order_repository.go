@@ -121,13 +121,7 @@ func (o *orderRepository) FetchNewOrdersToChan(ctx context.Context, ordersCh cha
 			return err
 		}
 
-		select {
-		case <-ctx.Done():
-			o.log.Info(fmt.Sprintf("%s: context cancelled", fn))
-			close(ordersCh)
-			return ctx.Err()
-		case ordersCh <- order:
-		}
+		ordersCh <- order
 	}
 
 	if err = rows.Err(); err != nil {

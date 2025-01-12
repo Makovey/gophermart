@@ -9,7 +9,6 @@ import (
 	"os/signal"
 	"path/filepath"
 	"sync"
-	"syscall"
 	"time"
 
 	"github.com/Makovey/gophermart/internal/service/worker"
@@ -34,7 +33,7 @@ func (a *App) InitDependencies() error {
 }
 
 func (a *App) Run() {
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, os.Kill)
 	defer stop()
 
 	readyCh := make(chan struct{})
@@ -68,7 +67,7 @@ func (a *App) startAccrualWorker(ctx context.Context, readyCh <-chan struct{}) {
 			accrual.NewHTTPClient(a.cfg, a.logger),
 			a.logger,
 		)
-		w.ProcessNewOrders()
+		w.ProcessNewOrders(ctx)
 
 		<-ctx.Done()
 		w.DownProcess()
@@ -108,7 +107,6 @@ func (a *App) runAccrualSystem(ctx context.Context, ready chan<- struct{}) {
 		}
 	}()
 
-	cmd.Wait()
 }
 
 func (a *App) runHTTPServer(ctx context.Context) {
