@@ -21,12 +21,16 @@ const (
 )
 
 type App struct {
-	deps *deps
-	wg   *sync.WaitGroup
+	*deps
+	wg *sync.WaitGroup
 }
 
 func NewApp() *App {
 	return &App{deps: newDeps(), wg: &sync.WaitGroup{}}
+}
+
+func (a *App) InitDependencies() error {
+	return a.deps.initDependencies()
 }
 
 func (a *App) Run() {
@@ -36,17 +40,11 @@ func (a *App) Run() {
 	readyCh := make(chan struct{})
 	defer close(readyCh)
 
-	a.initDependencies()
 	a.startHTTPServer(ctx)
 	a.startAccrualSystem(ctx, readyCh)
 	a.startAccrualWorker(ctx, readyCh)
 
 	a.wg.Wait()
-}
-
-func (a *App) initDependencies() {
-	a.deps.Config()
-	a.deps.Logger()
 }
 
 func (a *App) startHTTPServer(ctx context.Context) {
@@ -66,9 +64,9 @@ func (a *App) startAccrualWorker(ctx context.Context, readyCh <-chan struct{}) {
 	<-readyCh
 	go func() {
 		w := worker.NewWorker(
-			a.deps.Repository(),
-			accrual.NewHTTPClient(a.deps.Config(), a.deps.Logger()),
-			a.deps.Logger(),
+			a.repo,
+			accrual.NewHTTPClient(a.cfg, a.logger),
+			a.logger,
 		)
 		w.ProcessNewOrders()
 
@@ -79,12 +77,13 @@ func (a *App) startAccrualWorker(ctx context.Context, readyCh <-chan struct{}) {
 
 func (a *App) runAccrualSystem(ctx context.Context, ready chan<- struct{}) {
 	defer a.wg.Done()
-	fileLoc := a.deps.Config().AccrualFileLocation()
-	port := a.deps.Config().AccrualAddress()
+	fileLoc := a.cfg.AccrualFileLocation()
+	port := a.cfg.AccrualAddress()
 
 	fullPath, err := filepath.Abs(fileLoc)
 	if err != nil {
-		a.deps.Logger().Error(fmt.Sprintf("can't abs absolute path from: %s", fullPath), "error", err.Error())
+		a.logger.Error(fmt.Sprintf("can't abs absolute path from: %s", fullPath), "error", err.Error())
+		return
 	}
 
 	cmd := exec.Command(fullPath, accrualSystemAddrFlag, port)
@@ -92,7 +91,8 @@ func (a *App) runAccrualSystem(ctx context.Context, ready chan<- struct{}) {
 	cmd.Stderr = os.Stderr
 	err = cmd.Start()
 	if err != nil {
-		a.deps.Logger().Error("can't run accrual system", "err", err.Error())
+		a.logger.Error("can't run accrual system", "err", err.Error())
+		return
 	}
 
 	time.AfterFunc(time.Second, func() {
@@ -103,7 +103,7 @@ func (a *App) runAccrualSystem(ctx context.Context, ready chan<- struct{}) {
 		<-ctx.Done()
 		if cmd.ProcessState != nil {
 			if err = cmd.Process.Kill(); err != nil {
-				a.deps.Logger().Error("can't kill process with accrual system", "err", err.Error())
+				a.logger.Error("can't kill process with accrual system", "err", err.Error())
 			}
 		}
 	}()
@@ -113,31 +113,30 @@ func (a *App) runAccrualSystem(ctx context.Context, ready chan<- struct{}) {
 
 func (a *App) runHTTPServer(ctx context.Context) {
 	defer a.wg.Done()
-	cfg := a.deps.Config()
-	a.deps.Logger().Info("starting http server on port: " + cfg.RunAddress())
+	a.logger.Info("starting http server on port: " + a.cfg.RunAddress())
 
 	srv := &http.Server{
-		Addr:    cfg.RunAddress(),
+		Addr:    a.cfg.RunAddress(),
 		Handler: a.initRouter(),
 	}
 
 	go func() {
 		if err := srv.ListenAndServe(); err != nil {
-			a.deps.Logger().Info("server closed", "error", err.Error())
+			a.logger.Info("server closed", "error", err.Error())
 		}
 	}()
 
 	<-ctx.Done()
-	a.deps.Logger().Debug("shutting down http server")
+	a.logger.Debug("shutting down http server")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	if err := a.deps.CloseAll(); err != nil {
-		a.deps.Logger().Error("closed all resources with error", "error", err.Error())
+	if err := a.CloseAll(); err != nil {
+		a.logger.Error("closed all resources with error", "error", err.Error())
 	}
 
 	if err := srv.Shutdown(ctx); err != nil {
-		a.deps.Logger().Error("server forced to shutdown: %v", "error", err.Error())
+		a.logger.Error("server forced to shutdown: %v", "error", err.Error())
 	}
 }

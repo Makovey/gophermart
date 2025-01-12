@@ -3,6 +3,7 @@ package postgresql
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/shopspring/decimal"
@@ -29,10 +30,11 @@ func (h *historyRepository) RecordUsersWithdraw(ctx context.Context, userID, ord
 
 	_, err := h.pool.Exec(
 		ctx,
-		`INSERT INTO gophermart_history (owner_user_id, order_id, withdraw) VALUES ($1, $2, $3)`,
+		`INSERT INTO gophermart_history (owner_user_id, order_id, withdraw, created_at) VALUES ($1, $2, $3, $4)`,
 		userID,
 		orderID,
 		amount,
+		time.Now(),
 	)
 	if err != nil {
 		h.log.Error(fmt.Sprintf("%s: failed to post history stamp", fn), "error", err)

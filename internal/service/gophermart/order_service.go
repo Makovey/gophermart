@@ -4,13 +4,12 @@ import (
 	"context"
 	"errors"
 	"strconv"
-	"time"
 
 	"github.com/Makovey/gophermart/internal/service"
+	"github.com/Makovey/gophermart/internal/service/adapter"
 	"github.com/Makovey/gophermart/internal/service/luhn"
 	"github.com/Makovey/gophermart/internal/transport"
 	"github.com/Makovey/gophermart/internal/transport/http/model"
-	"github.com/Makovey/gophermart/internal/types"
 )
 
 type orderService struct {
@@ -58,23 +57,5 @@ func (o *orderService) GetOrders(ctx context.Context, userID string) ([]model.Or
 		return nil, err
 	}
 
-	var models []model.OrderResponse
-	for _, repOrder := range repoOrders {
-		var accrual *types.FloatDecimal
-		if repOrder.Accrual != nil {
-			val := types.FloatDecimal(*repOrder.Accrual)
-			accrual = &val
-		}
-
-		order := model.OrderResponse{
-			Number:     repOrder.OrderID,
-			Status:     repOrder.Status,
-			Accrual:    accrual,
-			UploadedAt: repOrder.CreatedAt.Format(time.RFC3339),
-		}
-
-		models = append(models, order)
-	}
-
-	return models, nil
+	return adapter.FromRepoToOrders(repoOrders), nil
 }

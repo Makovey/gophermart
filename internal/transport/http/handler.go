@@ -10,7 +10,6 @@ import (
 
 	"github.com/Makovey/gophermart/internal/logger"
 	"github.com/Makovey/gophermart/internal/middleware"
-	"github.com/Makovey/gophermart/internal/service/gophermart"
 	"github.com/Makovey/gophermart/internal/transport"
 )
 
@@ -35,6 +34,10 @@ func NewHTTPHandler(
 		historyService: service,
 	}
 }
+
+const (
+	UserIDLength = 36
+)
 
 func (h handler) writeResponseWithError(w http.ResponseWriter, statusCode int, message string) {
 	fn := "http.writeResponseWithError"
@@ -79,7 +82,7 @@ func getUserIDFromContext(ctx context.Context) (string, error) {
 	}
 
 	key := ctx.Value(middleware.CtxUserIDKey).(string)
-	if utf8.RuneCountInString(key) != gophermart.UserIDLength {
+	if utf8.RuneCountInString(key) != UserIDLength {
 		return "", errors.New("invalid user id")
 	}
 

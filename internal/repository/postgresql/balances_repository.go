@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
+
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/shopspring/decimal"
@@ -30,10 +32,11 @@ func (b *balancesRepository) IncreaseUsersBalance(ctx context.Context, userID st
 
 	_, err := b.pool.Exec(
 		ctx,
-		`INSERT INTO gophermart_balances (owner_user_id, accrual) VALUES ($1, $2) ON CONFLICT (owner_user_id)
-		DO UPDATE SET accrual = gophermart_balances.accrual + excluded.accrual, updated_at = excluded.updated_at`,
+		`INSERT INTO gophermart_balances (owner_user_id, accrual, updated_at) VALUES ($1, $2, $3) ON CONFLICT (owner_user_id)
+		DO UPDATE SET accrual = gophermart_balances.accrual + excluded.accrual, updated_at = $3`,
 		userID,
 		reward,
+		time.Now(),
 	)
 	if err != nil {
 		b.log.Error(fmt.Sprintf("%s: failed to update users balance", fn), "error", err)
@@ -48,9 +51,10 @@ func (b *balancesRepository) DecreaseUsersBalance(ctx context.Context, userID st
 
 	tag, err := b.pool.Exec(
 		ctx,
-		`UPDATE gophermart_balances SET accrual = accrual - $1, withdrawn = withdrawn + $1 WHERE owner_user_id = $2`,
+		`UPDATE gophermart_balances SET accrual = accrual - $1, withdrawn = withdrawn + $1, updated_at = $3 WHERE owner_user_id = $2`,
 		withdraw,
 		userID,
+		time.Now(),
 	)
 	if err != nil {
 		b.log.Error(fmt.Sprintf("%s: failed to update users balance", fn), "error", err)

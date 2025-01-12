@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -53,9 +54,10 @@ func (o *orderRepository) PostNewOrder(ctx context.Context, orderID, userID stri
 
 	_, err := o.pool.Exec(
 		ctx,
-		`INSERT INTO gophermart_orders (order_id, owner_user_id, status) VALUES ($1, $2, 'NEW')`,
+		`INSERT INTO gophermart_orders (order_id, owner_user_id, status, created_at) VALUES ($1, $2, 'NEW', $3)`,
 		orderID,
 		userID,
+		time.Now(),
 	)
 	if err != nil {
 		o.log.Error(fmt.Sprintf("%s: failed to post new order", fn), "error", err)
@@ -122,6 +124,7 @@ func (o *orderRepository) FetchNewOrdersToChan(ctx context.Context, ordersCh cha
 		select {
 		case <-ctx.Done():
 			o.log.Info(fmt.Sprintf("%s: context cancelled", fn))
+			close(ordersCh)
 			return ctx.Err()
 		case ordersCh <- order:
 		}

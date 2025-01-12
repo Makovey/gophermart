@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS gophermart_orders (
      owner_user_id varchar(100) REFERENCES gophermart_users(user_id),
      status status NOT NULL,
      accrual DECIMAL,
-     created_at TIMESTAMP DEFAULT (current_timestamp AT TIME ZONE 'Europe/Moscow')
+     created_at TIMESTAMP NOT NULL
 );
 -- +goose StatementEnd
 

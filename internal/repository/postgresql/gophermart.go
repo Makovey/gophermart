@@ -3,6 +3,7 @@ package postgresql
 import (
 	"context"
 	"database/sql"
+	"fmt"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/jackc/pgx/v5/stdlib"
@@ -30,17 +31,22 @@ type repo struct {
 	historyRepository service.HistoryRepository
 }
 
-func NewPostgresRepo(log logger.Logger, cfg config.Config) service.GophermartRepository {
+func NewPostgresRepo(log logger.Logger, cfg config.Config) (service.GophermartRepository, error) {
+	fn := "postgresql.NewPostgresRepo"
+
 	path, err := filepath.Abs(migrationPath)
 	if err != nil {
-		panic(err)
+		return nil, fmt.Errorf("[%s]: could not determine absolute path for migrations: %w", fn, err)
 	}
 
-	mustUpMigrations(cfg.DatabaseURI(), path)
+	err = upMigrations(cfg.DatabaseURI(), path)
+	if err != nil {
+		return nil, fmt.Errorf("[%s]: could not up migrations: %w", fn, err)
+	}
+
 	conn, err := pgxpool.New(context.Background(), cfg.DatabaseURI())
 	if err != nil {
-		log.Error("unable to connect to database", "error", err.Error())
-		panic(err)
+		return nil, fmt.Errorf("[%s]: could not connect to database: %w", fn, err)
 	}
 
 	return &repo{
@@ -50,19 +56,21 @@ func NewPostgresRepo(log logger.Logger, cfg config.Config) service.GophermartRep
 		orderRepo:         newOrderRepository(log, conn),
 		balancesRepo:      newBalancesRepository(log, conn),
 		historyRepository: newHistoryRepository(log, conn),
-	}
+	}, nil
 }
 
-func mustUpMigrations(databaseURI, migrationsDir string) {
+func upMigrations(databaseURI, migrationsDir string) error {
 	db, err := sql.Open("pgx", databaseURI)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	defer db.Close()
 
 	if err = goose.Up(db, migrationsDir); err != nil {
-		panic(err)
+		return err
 	}
+
+	return nil
 }
 
 func (r *repo) RegisterNewUser(ctx context.Context, user model.RegisterUser) error {

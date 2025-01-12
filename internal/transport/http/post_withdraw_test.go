@@ -16,7 +16,6 @@ import (
 	"github.com/Makovey/gophermart/internal/logger/dummy"
 	"github.com/Makovey/gophermart/internal/middleware"
 	"github.com/Makovey/gophermart/internal/service"
-	"github.com/Makovey/gophermart/internal/service/gophermart"
 	"github.com/Makovey/gophermart/internal/service/mocks"
 )
 
@@ -54,7 +53,7 @@ func TestPostWithdrawHandler(t *testing.T) {
 					"order": "1234567890",
 					"sum":   100.50,
 				})),
-				authToken: uuid.NewString()[:gophermart.UserIDLength],
+				authToken: uuid.NewString(),
 			},
 		},
 		{
@@ -73,7 +72,7 @@ func TestPostWithdrawHandler(t *testing.T) {
 			expects: expects{},
 			params: params{
 				body:      errReader(0),
-				authToken: uuid.NewString()[:gophermart.UserIDLength],
+				authToken: uuid.NewString(),
 			},
 		},
 		{
@@ -86,7 +85,7 @@ func TestPostWithdrawHandler(t *testing.T) {
 				body: strings.NewReader(makeJSON(map[string]any{
 					"sum": 100.50,
 				})),
-				authToken: uuid.NewString()[:gophermart.UserIDLength],
+				authToken: uuid.NewString(),
 			},
 		},
 		{
@@ -97,7 +96,7 @@ func TestPostWithdrawHandler(t *testing.T) {
 			expects: expects{},
 			params: params{
 				body:      strings.NewReader("1221"),
-				authToken: uuid.NewString()[:gophermart.UserIDLength],
+				authToken: uuid.NewString(),
 			},
 		},
 		{
@@ -115,7 +114,7 @@ func TestPostWithdrawHandler(t *testing.T) {
 					"order": "1234567890",
 					"sum":   100.50,
 				})),
-				authToken: uuid.NewString()[:gophermart.UserIDLength],
+				authToken: uuid.NewString(),
 			},
 		},
 		{
@@ -133,7 +132,7 @@ func TestPostWithdrawHandler(t *testing.T) {
 					"order": "1234567890",
 					"sum":   100.50,
 				})),
-				authToken: uuid.NewString()[:gophermart.UserIDLength],
+				authToken: uuid.NewString(),
 			},
 		},
 		{
@@ -151,7 +150,7 @@ func TestPostWithdrawHandler(t *testing.T) {
 					"order": "1234567890",
 					"sum":   100.50,
 				})),
-				authToken: uuid.NewString()[:gophermart.UserIDLength],
+				authToken: uuid.NewString(),
 			},
 		},
 	}

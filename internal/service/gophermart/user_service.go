@@ -15,10 +15,6 @@ import (
 	"github.com/Makovey/gophermart/pkg/jwt"
 )
 
-const (
-	UserIDLength = 10
-)
-
 type userService struct {
 	repo service.UserRepository
 	log  logger.Logger
@@ -47,7 +43,7 @@ func (u *userService) RegisterNewUser(ctx context.Context, request model.AuthReq
 	}
 
 	user := repoModel.RegisterUser{
-		UserID:       uuid.NewString()[:UserIDLength],
+		UserID:       uuid.NewString(),
 		Login:        request.Login,
 		PasswordHash: string(pass),
 	}
