@@ -2,10 +2,10 @@ package gophermart
 
 import (
 	"context"
+	"github.com/Makovey/gophermart/internal/transport/http"
 
 	repoModel "github.com/Makovey/gophermart/internal/repository/model"
 	"github.com/Makovey/gophermart/internal/service/adapter"
-	"github.com/Makovey/gophermart/internal/transport"
 	"github.com/Makovey/gophermart/internal/transport/http/model"
 )
 
@@ -20,7 +20,7 @@ type historyService struct {
 
 func NewHistoryService(
 	repo HistoryServiceRepository,
-) transport.HistoryService {
+) http.HistoryService {
 	return &historyService{
 		repo: repo,
 	}

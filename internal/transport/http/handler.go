@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/Makovey/gophermart/internal/transport/http/model"
 	"net/http"
 	"unicode/utf8"
 
@@ -13,18 +14,46 @@ import (
 	"github.com/Makovey/gophermart/internal/transport"
 )
 
+//go:generate mockgen -source=handler.go -destination=../../service/mocks/service_mock.go -package=mocks
+type GophermartService interface {
+	UserService
+	OrderService
+	BalanceService
+	HistoryService
+}
+
+type UserService interface {
+	RegisterNewUser(ctx context.Context, request model.AuthRequest) (string, error)
+	LoginUser(ctx context.Context, request model.AuthRequest) (string, error)
+}
+
+type OrderService interface {
+	ValidateOrderID(orderID string) bool
+	ProcessNewOrder(ctx context.Context, userID, orderID string) error
+	GetOrders(ctx context.Context, userID string) ([]model.OrderResponse, error)
+}
+
+type BalanceService interface {
+	GetUsersBalance(ctx context.Context, userID string) (model.BalanceResponse, error)
+	WithdrawUsersBalance(ctx context.Context, userID string, withdraw model.WithdrawRequest) error
+}
+
+type HistoryService interface {
+	GetUsersWithdrawHistory(ctx context.Context, userID string) ([]model.WithdrawHistoryResponse, error)
+}
+
 type handler struct {
 	log logger.Logger
 
-	userService    transport.UserService
-	orderService   transport.OrderService
-	balanceService transport.BalanceService
-	historyService transport.HistoryService
+	userService    UserService
+	orderService   OrderService
+	balanceService BalanceService
+	historyService HistoryService
 }
 
 func NewHTTPHandler(
 	log logger.Logger,
-	service transport.GophermartService,
+	service GophermartService,
 ) transport.HTTPHandler {
 	return &handler{
 		log:            log,

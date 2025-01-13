@@ -3,6 +3,7 @@ package gophermart
 import (
 	"context"
 	"fmt"
+	"github.com/Makovey/gophermart/internal/transport/http"
 
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
@@ -10,7 +11,6 @@ import (
 	"github.com/Makovey/gophermart/internal/logger"
 	repoModel "github.com/Makovey/gophermart/internal/repository/model"
 	"github.com/Makovey/gophermart/internal/service"
-	"github.com/Makovey/gophermart/internal/transport"
 	"github.com/Makovey/gophermart/internal/transport/http/model"
 	"github.com/Makovey/gophermart/pkg/jwt"
 )
@@ -31,7 +31,7 @@ func NewUserService(
 	repo UserServiceRepository,
 	log logger.Logger,
 	jwt *jwt.JWT,
-) transport.UserService {
+) http.UserService {
 	return &userService{
 		repo: repo,
 		log:  log,

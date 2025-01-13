@@ -2,13 +2,13 @@ package gophermart
 
 import (
 	"context"
+	"github.com/Makovey/gophermart/internal/transport/http"
 
 	"github.com/shopspring/decimal"
 
 	repoModel "github.com/Makovey/gophermart/internal/repository/model"
 	"github.com/Makovey/gophermart/internal/service"
 	"github.com/Makovey/gophermart/internal/service/adapter"
-	"github.com/Makovey/gophermart/internal/transport"
 	"github.com/Makovey/gophermart/internal/transport/http/model"
 )
 
@@ -25,7 +25,7 @@ type balanceService struct {
 
 func NewBalanceService(
 	balanceRepo BalancesServiceRepository,
-) transport.BalanceService {
+) http.BalanceService {
 	return &balanceService{
 		balanceRepo: balanceRepo,
 	}

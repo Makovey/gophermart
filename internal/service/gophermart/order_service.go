@@ -3,13 +3,13 @@ package gophermart
 import (
 	"context"
 	"errors"
+	"github.com/Makovey/gophermart/internal/transport/http"
 	"strconv"
 
 	repoModel "github.com/Makovey/gophermart/internal/repository/model"
 	"github.com/Makovey/gophermart/internal/service"
 	"github.com/Makovey/gophermart/internal/service/adapter"
 	"github.com/Makovey/gophermart/internal/service/luhn"
-	"github.com/Makovey/gophermart/internal/transport"
 	"github.com/Makovey/gophermart/internal/transport/http/model"
 )
 
@@ -26,7 +26,7 @@ type orderService struct {
 
 func NewOrderService(
 	repo OrderServiceRepository,
-) transport.OrderService {
+) http.OrderService {
 	return &orderService{
 		repo: repo,
 	}

@@ -2,24 +2,24 @@ package gophermart
 
 import (
 	"context"
+	"github.com/Makovey/gophermart/internal/transport/http"
 
-	"github.com/Makovey/gophermart/internal/transport"
 	"github.com/Makovey/gophermart/internal/transport/http/model"
 )
 
 type serv struct {
-	userServ    transport.UserService
-	orderServ   transport.OrderService
-	balanceServ transport.BalanceService
-	historyServ transport.HistoryService
+	userServ    http.UserService
+	orderServ   http.OrderService
+	balanceServ http.BalanceService
+	historyServ http.HistoryService
 }
 
 func NewGophermartService(
-	userServ transport.UserService,
-	orderServ transport.OrderService,
-	balanceServ transport.BalanceService,
-	historyServ transport.HistoryService,
-) transport.GophermartService {
+	userServ http.UserService,
+	orderServ http.OrderService,
+	balanceServ http.BalanceService,
+	historyServ http.HistoryService,
+) http.GophermartService {
 	return &serv{
 		userServ:    userServ,
 		orderServ:   orderServ,
