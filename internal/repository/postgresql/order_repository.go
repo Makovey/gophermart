@@ -33,14 +33,15 @@ func (r *Repo) GetOrderByID(ctx context.Context, orderID string) (model.Order, e
 	return order, nil
 }
 
-func (r *Repo) PostNewOrder(ctx context.Context, orderID, userID string) error {
+func (r *Repo) PostNewOrder(ctx context.Context, orderID, status, userID string) error {
 	fn := "postgresql.PostNewOrder"
 
 	_, err := r.pool.Exec(
 		ctx,
-		`INSERT INTO gophermart_orders (order_id, owner_user_id, status, created_at) VALUES ($1, $2, 'NEW', $3)`,
+		`INSERT INTO gophermart_orders (order_id, owner_user_id, status, created_at) VALUES ($1, $2, $3, $4)`,
 		orderID,
 		userID,
+		status,
 		time.Now(),
 	)
 	if err != nil {
@@ -80,12 +81,14 @@ func (r *Repo) GetOrders(ctx context.Context, userID string) ([]model.Order, err
 	return orders, nil
 }
 
-func (r *Repo) FetchNewOrdersToChan(ctx context.Context, ordersCh chan<- model.Order) error {
+func (r *Repo) FetchNewOrdersToChan(ctx context.Context, ordersCh chan<- model.Order, newStatus, inProgressStatus string) error {
 	fn := "postgresql.FetchNewOrdersToChan"
 
 	rows, err := r.pool.Query(
 		ctx,
-		`SELECT * FROM gophermart_orders WHERE status = 'NEW' OR status = 'PROCESSING' ORDER BY created_at`,
+		`SELECT * FROM gophermart_orders WHERE status = $1 OR status = $2 ORDER BY created_at`,
+		newStatus,
+		inProgressStatus,
 	)
 	if err != nil {
 		return fmt.Errorf("[%s] failed to query orders: %w", fn, err)

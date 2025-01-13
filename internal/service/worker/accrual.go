@@ -20,7 +20,7 @@ import (
 
 //go:generate mockgen -source=accrual.go -destination=../../repository/mocks/worker_mock.go -package=mocks
 type WorkerRepository interface {
-	FetchNewOrdersToChan(ctx context.Context, ordersCh chan<- repoModel.Order) error
+	FetchNewOrdersToChan(ctx context.Context, ordersCh chan<- repoModel.Order, newStatus, inProgressStatus string) error
 	UpdateOrder(ctx context.Context, status repoModel.OrderStatus) error
 	IncreaseUsersBalance(ctx context.Context, userID string, reward decimal.Decimal) error
 }
@@ -68,7 +68,7 @@ func (w *worker) runFetchingProcess(
 	for {
 		select {
 		case <-w.ticker.C:
-			err := w.repo.FetchNewOrdersToChan(ctx, orders)
+			err := w.repo.FetchNewOrdersToChan(ctx, orders, "NEW", "PROCESSING")
 			if err != nil {
 				w.log.Error(fmt.Sprintf("[%s] failed to fetch new orders", fn))
 			}

@@ -2,6 +2,7 @@ package gophermart
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/shopspring/decimal"
@@ -37,6 +38,10 @@ func (b *balanceService) GetUsersBalance(ctx context.Context, userID string) (mo
 
 	balance, err := b.balanceRepo.GetUsersBalance(ctx, userID)
 	if err != nil {
+		switch {
+		case errors.Is(err, service.ErrNotFound):
+			balance = repoModel.Balance{}
+		}
 		return model.BalanceResponse{}, fmt.Errorf("[%s]: %w", fn, err)
 	}
 
@@ -58,7 +63,12 @@ func (b *balanceService) WithdrawUsersBalance(ctx context.Context, userID string
 
 	balance, err := b.balanceRepo.GetUsersBalance(ctx, userID)
 	if err != nil {
-		return fmt.Errorf("[%s]: %w", fn, err)
+		switch {
+		case errors.Is(err, service.ErrNotFound):
+			balance = repoModel.Balance{}
+		default:
+			return fmt.Errorf("[%s]: %w", fn, err)
+		}
 	}
 
 	if balance.Accrual.LessThan(withdrawModel.Sum) {

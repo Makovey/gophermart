@@ -65,7 +65,7 @@ func (r *Repo) GetUsersBalance(ctx context.Context, userID string) (model.Balanc
 	if err != nil {
 		switch {
 		case errors.Is(err, pgx.ErrNoRows):
-			return model.Balance{}, nil
+			return model.Balance{}, service.ErrNotFound
 		default:
 			return model.Balance{}, fmt.Errorf("[%s] failed to query users balance: %w", fn, service.ErrExecStmt)
 		}

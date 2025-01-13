@@ -18,7 +18,7 @@ import (
 type OrderServiceRepository interface {
 	GetOrderByID(ctx context.Context, orderID string) (repoModel.Order, error)
 	GetOrders(ctx context.Context, userID string) ([]repoModel.Order, error)
-	PostNewOrder(ctx context.Context, orderID, userID string) error
+	PostNewOrder(ctx context.Context, orderID, status, userID string) error
 }
 
 type orderService struct {
@@ -49,7 +49,7 @@ func (o *orderService) ProcessNewOrder(ctx context.Context, userID, orderID stri
 	if err != nil {
 		switch {
 		case errors.Is(err, service.ErrNotFound):
-			return o.repo.PostNewOrder(ctx, orderID, userID)
+			return o.repo.PostNewOrder(ctx, orderID, "NEW", userID)
 		default:
 			return fmt.Errorf("[%s]: %w", fn, err)
 		}
