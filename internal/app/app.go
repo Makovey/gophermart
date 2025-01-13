@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"os/exec"
@@ -12,7 +13,12 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/Makovey/gophermart/internal/config"
+	"github.com/Makovey/gophermart/internal/logger"
+	"github.com/Makovey/gophermart/internal/middleware"
+	"github.com/Makovey/gophermart/internal/service"
 	"github.com/Makovey/gophermart/internal/service/worker"
+	"github.com/Makovey/gophermart/internal/transport"
 	"github.com/Makovey/gophermart/internal/transport/accrual"
 )
 
@@ -21,16 +27,30 @@ const (
 )
 
 type App struct {
-	*deps
+	logger         logger.Logger
+	cfg            config.Config
+	repo           service.GophermartRepository
+	handler        transport.HTTPHandler
+	authMiddleware middleware.Auth
+
 	wg *sync.WaitGroup
 }
 
-func NewApp() *App {
-	return &App{deps: newDeps(), wg: &sync.WaitGroup{}}
-}
-
-func (a *App) InitDependencies() error {
-	return a.deps.initDependencies()
+func NewApp(
+	log logger.Logger,
+	cfg config.Config,
+	repo service.GophermartRepository,
+	handler transport.HTTPHandler,
+	authMiddleware middleware.Auth,
+) *App {
+	return &App{
+		logger:         log,
+		cfg:            cfg,
+		repo:           repo,
+		handler:        handler,
+		authMiddleware: authMiddleware,
+		wg:             &sync.WaitGroup{},
+	}
 }
 
 func (a *App) Run() {
@@ -128,7 +148,7 @@ func (a *App) runHTTPServer(ctx context.Context) {
 	<-ctx.Done()
 	a.logger.Debug("shutting down http server")
 
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
 	if err := a.CloseAll(); err != nil {
@@ -138,4 +158,12 @@ func (a *App) runHTTPServer(ctx context.Context) {
 	if err := srv.Shutdown(ctx); err != nil {
 		a.logger.Error("server forced to shutdown: %v", "error", err.Error())
 	}
+}
+
+func (a *App) CloseAll() error {
+	if closer, ok := a.repo.(io.Closer); ok {
+		return closer.Close()
+	}
+
+	return nil
 }

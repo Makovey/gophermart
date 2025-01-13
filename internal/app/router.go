@@ -19,9 +19,7 @@ func (a *App) initRouter() http.Handler {
 	r.Post("/api/user/login", a.handler.LoginUser)
 
 	r.Group(func(r chi.Router) {
-		authMiddleware := middleware.NewAuth(a.jwt, a.logger)
-
-		r.Use(authMiddleware.Authenticate)
+		r.Use(a.authMiddleware.Authenticate)
 		r.Get("/api/user/orders", a.handler.GetOrders)
 		r.Post("/api/user/orders", a.handler.PostOrder)
 
