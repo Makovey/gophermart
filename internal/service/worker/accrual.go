@@ -4,10 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/Makovey/gophermart/internal/config"
 	"sync"
 	"time"
 
+	"github.com/shopspring/decimal"
+
+	"github.com/Makovey/gophermart/internal/config"
 	"github.com/Makovey/gophermart/internal/logger"
 	repoModel "github.com/Makovey/gophermart/internal/repository/model"
 	"github.com/Makovey/gophermart/internal/service"
@@ -16,29 +18,34 @@ import (
 	"github.com/Makovey/gophermart/internal/transport/accrual/model"
 )
 
+//go:generate mockgen -source=accrual.go -destination=../../repository/mocks/worker_mock.go -package=mocks
+type WorkerRepository interface {
+	FetchNewOrdersToChan(ctx context.Context, ordersCh chan<- repoModel.Order) error
+	UpdateOrder(ctx context.Context, status repoModel.OrderStatus) error
+	IncreaseUsersBalance(ctx context.Context, userID string, reward decimal.Decimal) error
+}
+
 type worker struct {
-	orderRepo   service.OrderRepository
-	balanceRepo service.BalancesRepository
-	client      transport.Accrual
-	ticker      *time.Ticker
-	log         logger.Logger
-	cfg         config.Config
-	wg          *sync.WaitGroup
+	repo   WorkerRepository
+	client transport.Accrual
+	ticker *time.Ticker
+	log    logger.Logger
+	cfg    config.Config
+	wg     *sync.WaitGroup
 }
 
 func NewWorker(
-	repo service.GophermartRepository,
+	repo WorkerRepository,
 	client transport.Accrual,
 	cfg config.Config,
 	log logger.Logger,
 ) service.Worker {
 	return &worker{
-		orderRepo:   repo,
-		balanceRepo: repo,
-		client:      client,
-		ticker:      time.NewTicker(cfg.TickerTimer()),
-		log:         log,
-		wg:          &sync.WaitGroup{},
+		repo:   repo,
+		client: client,
+		ticker: time.NewTicker(cfg.TickerTimer()),
+		log:    log,
+		wg:     &sync.WaitGroup{},
 	}
 }
 
@@ -61,7 +68,7 @@ func (w *worker) runFetchingProcess(
 	for {
 		select {
 		case <-w.ticker.C:
-			err := w.orderRepo.FetchNewOrdersToChan(ctx, orders)
+			err := w.repo.FetchNewOrdersToChan(ctx, orders)
 			if err != nil {
 				w.log.Error(fmt.Sprintf("%s: failed to fetch new orders", fn))
 			}
@@ -129,12 +136,12 @@ func (w *worker) updateOrderInfo(ctx context.Context, status model.OrderStatus, 
 		return
 	}
 
-	err := w.orderRepo.UpdateOrder(ctx, repoModel.OrderStatus{OrderID: status.OrderID, Status: status.Status, Accrual: status.Accrual})
+	err := w.repo.UpdateOrder(ctx, repoModel.OrderStatus{OrderID: status.OrderID, Status: status.Status, Accrual: status.Accrual})
 	if err != nil {
 		w.log.Error(fmt.Sprintf("%s: failed to update order info", fn), "error", err)
 	}
 
-	err = w.balanceRepo.IncreaseUsersBalance(ctx, userID, status.Accrual)
+	err = w.repo.IncreaseUsersBalance(ctx, userID, status.Accrual)
 	if err != nil {
 		w.log.Error(fmt.Sprintf("%s: failed to update users balance", fn), "error", err)
 	}

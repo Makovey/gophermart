@@ -3,7 +3,6 @@ package app
 import (
 	"context"
 	"fmt"
-	"io"
 	"net/http"
 	"os"
 	"os/exec"
@@ -17,9 +16,7 @@ import (
 	"github.com/Makovey/gophermart/internal/logger"
 	"github.com/Makovey/gophermart/internal/middleware"
 	"github.com/Makovey/gophermart/internal/service"
-	"github.com/Makovey/gophermart/internal/service/worker"
 	"github.com/Makovey/gophermart/internal/transport"
-	"github.com/Makovey/gophermart/internal/transport/accrual"
 )
 
 const (
@@ -29,7 +26,7 @@ const (
 type App struct {
 	logger         logger.Logger
 	cfg            config.Config
-	repo           service.GophermartRepository
+	worker         service.Worker
 	handler        transport.HTTPHandler
 	authMiddleware middleware.Auth
 
@@ -39,14 +36,14 @@ type App struct {
 func NewApp(
 	log logger.Logger,
 	cfg config.Config,
-	repo service.GophermartRepository,
+	worker service.Worker,
 	handler transport.HTTPHandler,
 	authMiddleware middleware.Auth,
 ) *App {
 	return &App{
 		logger:         log,
 		cfg:            cfg,
-		repo:           repo,
+		worker:         worker,
 		handler:        handler,
 		authMiddleware: authMiddleware,
 		wg:             &sync.WaitGroup{},
@@ -83,16 +80,10 @@ func (a *App) startAccrualWorker(ctx context.Context, readyCh <-chan struct{}) {
 
 	<-readyCh
 	go func() {
-		w := worker.NewWorker(
-			a.repo,
-			accrual.NewHTTPClient(a.cfg, a.logger),
-			a.cfg,
-			a.logger,
-		)
-		w.ProcessNewOrders(ctx)
+		a.worker.ProcessNewOrders(ctx)
 
 		<-ctx.Done()
-		w.DownProcess()
+		a.worker.DownProcess()
 	}()
 }
 
@@ -152,19 +143,7 @@ func (a *App) runHTTPServer(ctx context.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
-	if err := a.CloseAll(); err != nil {
-		a.logger.Error("closed all resources with error", "error", err.Error())
-	}
-
 	if err := srv.Shutdown(ctx); err != nil {
 		a.logger.Error("server forced to shutdown: %v", "error", err.Error())
 	}
-}
-
-func (a *App) CloseAll() error {
-	if closer, ok := a.repo.(io.Closer); ok {
-		return closer.Close()
-	}
-
-	return nil
 }

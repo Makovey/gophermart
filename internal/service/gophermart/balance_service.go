@@ -3,25 +3,31 @@ package gophermart
 import (
 	"context"
 
+	"github.com/shopspring/decimal"
+
+	repoModel "github.com/Makovey/gophermart/internal/repository/model"
 	"github.com/Makovey/gophermart/internal/service"
 	"github.com/Makovey/gophermart/internal/service/adapter"
 	"github.com/Makovey/gophermart/internal/transport"
 	"github.com/Makovey/gophermart/internal/transport/http/model"
 )
 
-type balanceService struct {
-	balanceRepo service.BalancesRepository
-	orderRepo   service.OrderRepository
-	historyRepo service.HistoryRepository
+//go:generate mockgen -source=balance_service.go -destination=../../repository/mocks/balance_mock.go -package=mocks
+type BalancesServiceRepository interface {
+	DecreaseUsersBalance(ctx context.Context, userID string, withdraw decimal.Decimal) error
+	GetUsersBalance(ctx context.Context, userID string) (repoModel.Balance, error)
+	RecordUsersWithdraw(ctx context.Context, userID, orderID string, amount decimal.Decimal) error
 }
 
-func newBalanceService(
-	repo service.GophermartRepository,
+type balanceService struct {
+	balanceRepo BalancesServiceRepository
+}
+
+func NewBalanceService(
+	balanceRepo BalancesServiceRepository,
 ) transport.BalanceService {
 	return &balanceService{
-		balanceRepo: repo,
-		orderRepo:   repo,
-		historyRepo: repo,
+		balanceRepo: balanceRepo,
 	}
 }
 
@@ -60,7 +66,7 @@ func (b *balanceService) WithdrawUsersBalance(ctx context.Context, userID string
 		return err
 	}
 
-	err = b.historyRepo.RecordUsersWithdraw(ctx, userID, withdrawModel.Order, withdrawModel.Sum)
+	err = b.balanceRepo.RecordUsersWithdraw(ctx, userID, withdrawModel.Order, withdrawModel.Sum)
 	if err != nil {
 		return err
 	}

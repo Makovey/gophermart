@@ -5,6 +5,7 @@ import (
 	"errors"
 	"strconv"
 
+	repoModel "github.com/Makovey/gophermart/internal/repository/model"
 	"github.com/Makovey/gophermart/internal/service"
 	"github.com/Makovey/gophermart/internal/service/adapter"
 	"github.com/Makovey/gophermart/internal/service/luhn"
@@ -12,12 +13,19 @@ import (
 	"github.com/Makovey/gophermart/internal/transport/http/model"
 )
 
-type orderService struct {
-	repo service.OrderRepository
+//go:generate mockgen -source=order_service.go -destination=../../repository/mocks/order_mock.go -package=mocks
+type OrderServiceRepository interface {
+	GetOrderByID(ctx context.Context, orderID string) (repoModel.Order, error)
+	GetOrders(ctx context.Context, userID string) ([]repoModel.Order, error)
+	PostNewOrder(ctx context.Context, orderID, userID string) error
 }
 
-func newOrderService(
-	repo service.OrderRepository,
+type orderService struct {
+	repo OrderServiceRepository
+}
+
+func NewOrderService(
+	repo OrderServiceRepository,
 ) transport.OrderService {
 	return &orderService{
 		repo: repo,

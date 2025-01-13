@@ -1,6 +1,8 @@
 package main
 
 import (
+	"github.com/Makovey/gophermart/internal/service/worker"
+	"github.com/Makovey/gophermart/internal/transport/accrual"
 	"os"
 
 	"github.com/Makovey/gophermart/internal/app"
@@ -24,11 +26,24 @@ func main() {
 		os.Exit(1)
 	}
 
-	serv := gophermart.NewGophermartService(repo, log, jwt)
-	handler := http.NewHTTPHandler(log, serv)
-	auth := middleware.NewAuth(jwt, log)
+	serv := gophermart.NewGophermartService(
+		gophermart.NewUserService(repo, log, jwt),
+		gophermart.NewOrderService(repo),
+		gophermart.NewBalanceService(repo),
+		gophermart.NewHistoryService(repo),
+	)
 
-	appl := app.NewApp(log, cfg, repo, handler, auth)
+	appl := app.NewApp(
+		log,
+		cfg,
+		worker.NewWorker(repo, accrual.NewHTTPClient(cfg, log), cfg, log),
+		http.NewHTTPHandler(log, serv),
+		middleware.NewAuth(jwt, log),
+	)
 
 	appl.Run()
+
+	if err = repo.Close(); err != nil {
+		log.Error("closed all resources with error", "error", err.Error())
+	}
 }

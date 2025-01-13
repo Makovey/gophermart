@@ -15,14 +15,20 @@ import (
 	"github.com/Makovey/gophermart/pkg/jwt"
 )
 
+//go:generate mockgen -source=user_service.go -destination=../../repository/mocks/user_mock.go -package=mocks
+type UserServiceRepository interface {
+	RegisterNewUser(ctx context.Context, user repoModel.RegisterUser) error
+	LoginUser(ctx context.Context, login string) (repoModel.RegisterUser, error)
+}
+
 type userService struct {
-	repo service.UserRepository
+	repo UserServiceRepository
 	log  logger.Logger
 	jwt  *jwt.JWT
 }
 
-func newUserService(
-	repo service.UserRepository,
+func NewUserService(
+	repo UserServiceRepository,
 	log logger.Logger,
 	jwt *jwt.JWT,
 ) transport.UserService {

@@ -3,11 +3,8 @@ package gophermart
 import (
 	"context"
 
-	"github.com/Makovey/gophermart/internal/logger"
-	"github.com/Makovey/gophermart/internal/service"
 	"github.com/Makovey/gophermart/internal/transport"
 	"github.com/Makovey/gophermart/internal/transport/http/model"
-	"github.com/Makovey/gophermart/pkg/jwt"
 )
 
 type serv struct {
@@ -18,15 +15,16 @@ type serv struct {
 }
 
 func NewGophermartService(
-	repo service.GophermartRepository,
-	logger logger.Logger,
-	jwt *jwt.JWT,
+	userServ transport.UserService,
+	orderServ transport.OrderService,
+	balanceServ transport.BalanceService,
+	historyServ transport.HistoryService,
 ) transport.GophermartService {
 	return &serv{
-		userServ:    newUserService(repo, logger, jwt),
-		orderServ:   newOrderService(repo),
-		balanceServ: newBalanceService(repo),
-		historyServ: newHistoryService(repo),
+		userServ:    userServ,
+		orderServ:   orderServ,
+		balanceServ: balanceServ,
+		historyServ: historyServ,
 	}
 }
 
