@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/Makovey/gophermart/internal/config"
 	"sync"
 	"time"
 
@@ -21,19 +22,21 @@ type worker struct {
 	client      transport.Accrual
 	ticker      *time.Ticker
 	log         logger.Logger
+	cfg         config.Config
 	wg          *sync.WaitGroup
 }
 
 func NewWorker(
 	repo service.GophermartRepository,
 	client transport.Accrual,
+	cfg config.Config,
 	log logger.Logger,
 ) service.Worker {
 	return &worker{
 		orderRepo:   repo,
 		balanceRepo: repo,
 		client:      client,
-		ticker:      time.NewTicker(time.Second * 1),
+		ticker:      time.NewTicker(cfg.TickerTimer()),
 		log:         log,
 		wg:          &sync.WaitGroup{},
 	}

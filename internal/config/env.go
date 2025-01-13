@@ -9,10 +9,12 @@ import (
 )
 
 type envConfig struct {
-	RunAddress          string `env:"RUN_ADDRESS"`
-	DatabaseURI         string `env:"DATABASE_URI"`
-	AccrualAddress      string `env:"ACCRUAL_SYSTEM_ADDRESS"`
-	AccrualFileLocation string `env:"ACCRUAL_SYSTEM_LOCATION"`
+	RunAddress           string `env:"RUN_ADDRESS"`
+	DatabaseURI          string `env:"DATABASE_URI"`
+	AccrualAddress       string `env:"ACCRUAL_SYSTEM_ADDRESS"`
+	AccrualFileLocation  string `env:"ACCRUAL_SYSTEM_LOCATION"`
+	TickerTimer          string `env:"ACCRUAL_WORKER_TIMER"`
+	AccrualClientTimeout string `env:"ACCRUAL_CLIENT_TIMEOUT"`
 }
 
 func newEnvConfig(log logger.Logger) envConfig {

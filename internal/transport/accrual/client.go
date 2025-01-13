@@ -33,7 +33,7 @@ type HTTPClient struct {
 func NewHTTPClient(cfg config.Config, log logger.Logger) *HTTPClient {
 	return &HTTPClient{
 		http: &http.Client{
-			Timeout: 10 * time.Second,
+			Timeout: cfg.AccrualClientTimeout(),
 		},
 		cfg: cfg,
 		log: log,

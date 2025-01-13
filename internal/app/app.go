@@ -86,6 +86,7 @@ func (a *App) startAccrualWorker(ctx context.Context, readyCh <-chan struct{}) {
 		w := worker.NewWorker(
 			a.repo,
 			accrual.NewHTTPClient(a.cfg, a.logger),
+			a.cfg,
 			a.logger,
 		)
 		w.ProcessNewOrders(ctx)

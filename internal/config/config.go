@@ -2,6 +2,7 @@ package config
 
 import (
 	"strings"
+	"time"
 
 	"github.com/Makovey/gophermart/internal/logger"
 )
@@ -11,107 +12,100 @@ type Config interface {
 	DatabaseURI() string
 	AccrualAddress() string
 	AccrualFileLocation() string
+	TickerTimer() time.Duration
+	AccrualClientTimeout() time.Duration
 }
 
 const (
 	defaultAddr                = "localhost:8080"
 	defaultAccrual             = ":8085"
 	defaultAccrualFileLocation = "./cmd/accrual/accrual_darwin_arm64"
+	defaultTickerTimer         = "1s"
+	defaultClientTimeout       = "10s"
 )
 
 type config struct {
-	runAddress          string
-	databaseURI         string
-	accrualAddress      string
-	accrualFileLocation string
+	runAddress           string
+	databaseURI          string
+	accrualAddress       string
+	accrualFileLocation  string
+	tickerTimer          time.Duration
+	accrualClientTimeout time.Duration
 }
 
-func (cfg config) RunAddress() string {
+func (cfg *config) RunAddress() string {
 	return cfg.runAddress
 }
 
-func (cfg config) DatabaseURI() string {
+func (cfg *config) DatabaseURI() string {
 	return cfg.databaseURI
 }
 
-func (cfg config) AccrualAddress() string {
+func (cfg *config) AccrualAddress() string {
 	return cfg.accrualAddress
 }
 
-func (cfg config) AccrualFileLocation() string {
+func (cfg *config) AccrualFileLocation() string {
 	return cfg.accrualFileLocation
+}
+
+func (cfg *config) TickerTimer() time.Duration {
+	return cfg.tickerTimer
+}
+
+func (cfg *config) AccrualClientTimeout() time.Duration {
+	return cfg.accrualClientTimeout
 }
 
 func NewConfig(log logger.Logger) Config {
 	envCfg := newEnvConfig(log)
 	flags := newFlagsValue()
 
-	addr := runAddress(envCfg, flags)
-	dsn := databaseURI(envCfg, flags)
-	accrualAddr := accrualAddress(envCfg, flags)
-	accrualFileLoc := accrualLocation(envCfg, flags)
-
-	log.Debug("RunAddress: " + addr)
-	log.Debug("Database DSN: " + dsn)
-	log.Debug("AccrualAddr: " + accrualAddr)
-	log.Debug("AccrualFileLocation: " + accrualFileLoc)
-
-	return &config{
-		runAddress:          addr,
-		databaseURI:         dsn,
-		accrualAddress:      accrualAddr,
-		accrualFileLocation: accrualFileLoc,
+	tickerTimer, err := time.ParseDuration(resolveValue(flags.tickerTimer, envCfg.TickerTimer, defaultTickerTimer))
+	if err != nil {
+		log.Warn("invalid ticker timer duration, used used: " + defaultTickerTimer)
+		tickerTimer, _ = time.ParseDuration(defaultTickerTimer)
 	}
+
+	clientTimeout, err := time.ParseDuration(resolveValue(flags.accrualClientTimeout, envCfg.AccrualClientTimeout, defaultClientTimeout))
+	if err != nil {
+		log.Warn("invalid client timeout duration, used default: " + defaultClientTimeout)
+		clientTimeout, _ = time.ParseDuration(defaultClientTimeout)
+	}
+
+	cfg := &config{
+		runAddress:           resolveValue(flags.runAddress, envCfg.RunAddress, defaultAddr),
+		databaseURI:          resolveDatabaseURI(flags.databaseURI, envCfg.DatabaseURI),
+		accrualAddress:       resolveValue(flags.accrualAddress, envCfg.AccrualAddress, defaultAccrual),
+		accrualFileLocation:  resolveValue(flags.accrualFileLocation, envCfg.AccrualFileLocation, defaultAccrualFileLocation),
+		tickerTimer:          tickerTimer,
+		accrualClientTimeout: clientTimeout,
+	}
+
+	log.Debug("RunAddress: " + cfg.runAddress)
+	log.Debug("Database DSN: " + cfg.databaseURI)
+	log.Debug("AccrualAddr: " + cfg.accrualAddress)
+	log.Debug("AccrualFileLocation: " + cfg.accrualFileLocation)
+	log.Debug("TickerTimer: " + cfg.tickerTimer.String())
+	log.Debug("AccrualClientTimeout: " + cfg.accrualClientTimeout.String())
+
+	return cfg
 }
 
-func runAddress(envCfg envConfig, flags flagsValue) string {
-	addr := defaultAddr
-
-	if flags.runAddress != "" {
-		addr = flags.runAddress
-	} else if envCfg.RunAddress != "" {
-		addr = envCfg.RunAddress
+func resolveValue(flagValue, envValue, defaultValue string) string {
+	if flagValue != "" {
+		return flagValue
 	}
-
-	return addr
+	if envValue != "" {
+		return envValue
+	}
+	return defaultValue
 }
 
-func databaseURI(envCfg envConfig, flags flagsValue) string {
-	var databaseDSN string
-
-	if flags.databaseURI != "" {
-		databaseDSN = flags.databaseURI
-	} else if envCfg.DatabaseURI != "" {
-		databaseDSN = envCfg.DatabaseURI
+func resolveDatabaseURI(flagValue, envValue string) string {
+	dsn := resolveValue(flagValue, envValue, "")
+	if dsn != "" && !strings.Contains(dsn, "?sslmode=disable") {
+		dsn += "?sslmode=disable"
 	}
-
-	if databaseDSN != "" && !strings.Contains(databaseDSN, "?sslmode=disable") {
-		databaseDSN = databaseDSN + "?sslmode=disable"
-	}
-
-	return databaseDSN
-}
-
-func accrualAddress(envCfg envConfig, flags flagsValue) string {
-	addr := defaultAccrual
-
-	if flags.accrualAddress != "" {
-		addr = flags.accrualAddress
-	} else if envCfg.AccrualAddress != "" {
-		addr = envCfg.AccrualAddress
-	}
-
-	return addr
-}
-
-func accrualLocation(envCfg envConfig, flags flagsValue) string {
-	loc := defaultAccrualFileLocation
-
-	if flags.accrualFileLocation != "" {
-		loc = flags.accrualFileLocation
-	} else if envCfg.AccrualFileLocation != "" {
-		loc = envCfg.AccrualFileLocation
-	}
-
-	return loc
+	return dsn
 }
