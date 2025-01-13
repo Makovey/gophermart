@@ -9,11 +9,10 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/Makovey/gophermart/internal/logger/dummy"
 	"github.com/Makovey/gophermart/internal/repository/mocks"
 	repoModel "github.com/Makovey/gophermart/internal/repository/model"
 	"github.com/Makovey/gophermart/internal/service"
-	"github.com/Makovey/gophermart/pkg/jwt"
+	servMock "github.com/Makovey/gophermart/internal/service/mocks"
 	"github.com/golang/mock/gomock"
 	"github.com/shopspring/decimal"
 )
@@ -54,9 +53,15 @@ func TestValidateOrderID(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			mock := mocks.NewMockGophermartRepository(ctrl)
+			mock := mocks.NewMockOrderServiceRepository(ctrl)
 
-			serv := NewGophermartService(mock, dummy.NewDummyLogger(), jwt.NewJWT(dummy.NewDummyLogger()))
+			serv := NewGophermartService(
+				servMock.NewMockUserService(ctrl),
+				NewOrderService(mock),
+				servMock.NewMockBalanceService(ctrl),
+				servMock.NewMockHistoryService(ctrl),
+			)
+
 			isValid := serv.ValidateOrderID(tt.params.orderID)
 
 			if tt.expects.expectedValid {
@@ -122,18 +127,23 @@ func TestProcessNewOrder(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			mock := mocks.NewMockGophermartRepository(ctrl)
+			mock := mocks.NewMockOrderServiceRepository(ctrl)
 			mock.EXPECT().GetOrderByID(gomock.Any(), tt.param.orderID).Return(tt.expects.getCallAns, tt.expects.getError)
 
 			if tt.expects.postNewCall {
-				mock.EXPECT().PostNewOrder(gomock.Any(), tt.param.orderID, tt.param.userID).Return(tt.expects.postError)
+				mock.EXPECT().PostNewOrder(gomock.Any(), tt.param.orderID, "NEW", tt.param.userID).Return(tt.expects.postError)
 			}
 
-			serv := NewGophermartService(mock, dummy.NewDummyLogger(), jwt.NewJWT(dummy.NewDummyLogger()))
+			serv := NewGophermartService(
+				servMock.NewMockUserService(ctrl),
+				NewOrderService(mock),
+				servMock.NewMockBalanceService(ctrl),
+				servMock.NewMockHistoryService(ctrl),
+			)
 			err := serv.ProcessNewOrder(context.Background(), tt.param.userID, tt.param.orderID)
 
 			if tt.want.finalErr != nil {
-				assert.Equal(t, tt.want.finalErr, err)
+				assert.ErrorContains(t, err, tt.want.finalErr.Error())
 			} else {
 				assert.NoError(t, err)
 			}
@@ -181,10 +191,15 @@ func TestGetOrders(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			mock := mocks.NewMockGophermartRepository(ctrl)
+			mock := mocks.NewMockOrderServiceRepository(ctrl)
 			mock.EXPECT().GetOrders(gomock.Any(), tt.param.userID).Return(tt.expects.repoResult, tt.expects.repoError)
 
-			serv := NewGophermartService(mock, dummy.NewDummyLogger(), jwt.NewJWT(dummy.NewDummyLogger()))
+			serv := NewGophermartService(
+				servMock.NewMockUserService(ctrl),
+				NewOrderService(mock),
+				servMock.NewMockBalanceService(ctrl),
+				servMock.NewMockHistoryService(ctrl),
+			)
 			models, err := serv.GetOrders(context.Background(), tt.param.userID)
 
 			if tt.want.err {

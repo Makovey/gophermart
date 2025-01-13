@@ -102,7 +102,12 @@ func (r *Repo) FetchNewOrdersToChan(ctx context.Context, ordersCh chan<- model.O
 			return fmt.Errorf("[%s] failed to scan orders: %w", fn, err)
 		}
 
-		ordersCh <- order
+		select {
+		case <-ctx.Done():
+			close(ordersCh)
+			return ctx.Err()
+		case ordersCh <- order:
+		}
 	}
 
 	if err = rows.Err(); err != nil {

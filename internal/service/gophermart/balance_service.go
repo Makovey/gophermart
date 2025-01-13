@@ -40,9 +40,10 @@ func (b *balanceService) GetUsersBalance(ctx context.Context, userID string) (mo
 	if err != nil {
 		switch {
 		case errors.Is(err, service.ErrNotFound):
-			balance = repoModel.Balance{}
+			return adapter.FromRepoToBalance(repoModel.Balance{}), nil
+		default:
+			return adapter.FromRepoToBalance(repoModel.Balance{}), fmt.Errorf("[%s]: %w", fn, err)
 		}
-		return model.BalanceResponse{}, fmt.Errorf("[%s]: %w", fn, err)
 	}
 
 	return adapter.FromRepoToBalance(balance), nil

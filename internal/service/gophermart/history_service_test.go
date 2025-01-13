@@ -9,10 +9,9 @@ import (
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/Makovey/gophermart/internal/logger/dummy"
 	"github.com/Makovey/gophermart/internal/repository/mocks"
 	repoModel "github.com/Makovey/gophermart/internal/repository/model"
-	"github.com/Makovey/gophermart/pkg/jwt"
+	servMock "github.com/Makovey/gophermart/internal/service/mocks"
 )
 
 func TestGetUsersWithdrawHistory(t *testing.T) {
@@ -57,10 +56,15 @@ func TestGetUsersWithdrawHistory(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			mock := mocks.NewMockGophermartRepository(ctrl)
+			mock := mocks.NewMockHistoryServiceRepository(ctrl)
 			mock.EXPECT().GetUsersHistory(gomock.Any(), gomock.Any()).Return(tt.expects.repoResult, tt.expects.repoError)
 
-			serv := NewGophermartService(mock, dummy.NewDummyLogger(), jwt.NewJWT(dummy.NewDummyLogger()))
+			serv := NewGophermartService(
+				servMock.NewMockUserService(ctrl),
+				servMock.NewMockOrderService(ctrl),
+				servMock.NewMockBalanceService(ctrl),
+				NewHistoryService(mock),
+			)
 			models, _ := serv.GetUsersWithdrawHistory(context.Background(), "1")
 
 			assert.Equal(t, tt.want.resultLen, len(models))

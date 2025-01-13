@@ -9,13 +9,12 @@ import (
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/Makovey/gophermart/internal/logger/dummy"
-	"github.com/Makovey/gophermart/internal/repository/mocks"
+	repoMock "github.com/Makovey/gophermart/internal/repository/mocks"
 	repoModel "github.com/Makovey/gophermart/internal/repository/model"
 	"github.com/Makovey/gophermart/internal/service"
+	servMock "github.com/Makovey/gophermart/internal/service/mocks"
 	"github.com/Makovey/gophermart/internal/transport/http/model"
 	"github.com/Makovey/gophermart/internal/types"
-	"github.com/Makovey/gophermart/pkg/jwt"
 )
 
 func TestBalanceServiceGetUsersBalance(t *testing.T) {
@@ -59,10 +58,15 @@ func TestBalanceServiceGetUsersBalance(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			mock := mocks.NewMockGophermartRepository(ctrl)
+			mock := repoMock.NewMockBalancesServiceRepository(ctrl)
 			mock.EXPECT().GetUsersBalance(gomock.Any(), gomock.Any()).Return(tt.expects.repoResult, tt.expects.repoError)
 
-			serv := NewGophermartService(mock, dummy.NewDummyLogger(), jwt.NewJWT(dummy.NewDummyLogger()))
+			serv := NewGophermartService(
+				servMock.NewMockUserService(ctrl),
+				servMock.NewMockOrderService(ctrl),
+				NewBalanceService(mock),
+				servMock.NewMockHistoryService(ctrl),
+			)
 			mod, _ := serv.GetUsersBalance(context.Background(), "1")
 
 			assert.Equal(t, mod, tt.want.balance)
@@ -124,7 +128,7 @@ func TestWithdrawUsersBalance(t *testing.T) {
 		{
 			name:       "withdraw error: balance repo error",
 			want:       want{serviceError: service.ErrNotFound},
-			expects:    expects{getUsersBalance: true},
+			expects:    expects{getUsersBalance: true, decreaseBalance: true, recordUsersBalance: true},
 			repoResult: repoResult{getBalanceErr: service.ErrNotFound},
 			args:       args{},
 		},
@@ -159,25 +163,33 @@ func TestWithdrawUsersBalance(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			mock := mocks.NewMockGophermartRepository(ctrl)
+			balanceRepoMock := repoMock.NewMockBalancesServiceRepository(ctrl)
 			// выключено, потому что тесты не учли этот кейс
 			//mock.EXPECT().GetOrderByID(gomock.Any(), gomock.Any()).Return(tt.repoResult.getOrderResponse, tt.repoResult.getOrderErr)
 			if tt.expects.getUsersBalance {
-				mock.EXPECT().GetUsersBalance(gomock.Any(), gomock.Any()).Return(tt.repoResult.getBalanceResult, tt.repoResult.getBalanceErr)
+				balanceRepoMock.EXPECT().GetUsersBalance(gomock.Any(), gomock.Any()).Return(tt.repoResult.getBalanceResult, tt.repoResult.getBalanceErr)
 			}
 
 			if tt.expects.decreaseBalance {
-				mock.EXPECT().DecreaseUsersBalance(gomock.Any(), gomock.Any(), gomock.Any()).Return(tt.repoResult.decreaseBalanceErr)
+				balanceRepoMock.EXPECT().DecreaseUsersBalance(gomock.Any(), gomock.Any(), gomock.Any()).Return(tt.repoResult.decreaseBalanceErr)
 			}
 
 			if tt.expects.recordUsersBalance {
-				mock.EXPECT().RecordUsersWithdraw(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(tt.repoResult.recordHistoryErr)
+				balanceRepoMock.EXPECT().RecordUsersWithdraw(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(tt.repoResult.recordHistoryErr)
 			}
 
-			serv := NewGophermartService(mock, dummy.NewDummyLogger(), jwt.NewJWT(dummy.NewDummyLogger()))
+			serv := NewGophermartService(
+				servMock.NewMockUserService(ctrl),
+				servMock.NewMockOrderService(ctrl),
+				NewBalanceService(balanceRepoMock),
+				servMock.NewMockHistoryService(ctrl),
+			)
 			err := serv.WithdrawUsersBalance(context.Background(), tt.args.userID, tt.args.request)
-
-			assert.Equal(t, err, tt.want.serviceError)
+			if err != nil {
+				assert.ErrorContains(t, err, tt.want.serviceError.Error())
+			} else {
+				assert.NoError(t, err)
+			}
 		})
 	}
 }

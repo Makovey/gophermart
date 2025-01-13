@@ -13,6 +13,7 @@ import (
 	"github.com/Makovey/gophermart/internal/logger/dummy"
 	"github.com/Makovey/gophermart/internal/repository/mocks"
 	repoModel "github.com/Makovey/gophermart/internal/repository/model"
+	servMock "github.com/Makovey/gophermart/internal/service/mocks"
 	"github.com/Makovey/gophermart/internal/transport/http/model"
 	"github.com/Makovey/gophermart/pkg/jwt"
 )
@@ -54,12 +55,17 @@ func TestRegisterNewUser(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			mock := mocks.NewMockGophermartRepository(ctrl)
+			mock := mocks.NewMockUserServiceRepository(ctrl)
 			if tt.expects.repoCall {
 				mock.EXPECT().RegisterNewUser(gomock.Any(), gomock.Any()).Return(tt.expects.repoError)
 			}
 
-			serv := NewGophermartService(mock, dummy.NewDummyLogger(), jwt.NewJWT(dummy.NewDummyLogger()))
+			serv := NewGophermartService(
+				NewUserService(mock, jwt.NewJWT(dummy.NewDummyLogger())),
+				servMock.NewMockOrderService(ctrl),
+				servMock.NewMockBalanceService(ctrl),
+				servMock.NewMockHistoryService(ctrl),
+			)
 			token, err := serv.RegisterNewUser(context.Background(), tt.param.authModel)
 
 			if err != nil {
@@ -111,10 +117,15 @@ func TestLoginUser(t *testing.T) {
 			pass, _ := bcrypt.GenerateFromPassword([]byte(tt.expects.repoAnswer.PasswordHash), bcrypt.DefaultCost)
 			tt.expects.repoAnswer.PasswordHash = string(pass)
 
-			mock := mocks.NewMockGophermartRepository(ctrl)
+			mock := mocks.NewMockUserServiceRepository(ctrl)
 			mock.EXPECT().LoginUser(gomock.Any(), tt.param.authModel.Login).Return(tt.expects.repoAnswer, tt.expects.repoError)
 
-			serv := NewGophermartService(mock, dummy.NewDummyLogger(), jwt.NewJWT(dummy.NewDummyLogger()))
+			serv := NewGophermartService(
+				NewUserService(mock, jwt.NewJWT(dummy.NewDummyLogger())),
+				servMock.NewMockOrderService(ctrl),
+				servMock.NewMockBalanceService(ctrl),
+				servMock.NewMockHistoryService(ctrl),
+			)
 			token, err := serv.LoginUser(context.Background(), tt.param.authModel)
 
 			if err != nil {

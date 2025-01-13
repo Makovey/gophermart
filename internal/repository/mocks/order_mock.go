@@ -66,15 +66,15 @@ func (mr *MockOrderServiceRepositoryMockRecorder) GetOrders(ctx, userID interfac
 }
 
 // PostNewOrder mocks base method.
-func (m *MockOrderServiceRepository) PostNewOrder(ctx context.Context, orderID, userID string) error {
+func (m *MockOrderServiceRepository) PostNewOrder(ctx context.Context, orderID, status, userID string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "PostNewOrder", ctx, orderID, userID)
+	ret := m.ctrl.Call(m, "PostNewOrder", ctx, orderID, status, userID)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // PostNewOrder indicates an expected call of PostNewOrder.
-func (mr *MockOrderServiceRepositoryMockRecorder) PostNewOrder(ctx, orderID, userID interface{}) *gomock.Call {
+func (mr *MockOrderServiceRepositoryMockRecorder) PostNewOrder(ctx, orderID, status, userID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PostNewOrder", reflect.TypeOf((*MockOrderServiceRepository)(nil).PostNewOrder), ctx, orderID, userID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PostNewOrder", reflect.TypeOf((*MockOrderServiceRepository)(nil).PostNewOrder), ctx, orderID, status, userID)
 }
