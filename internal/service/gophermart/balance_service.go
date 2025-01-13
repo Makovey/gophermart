@@ -2,13 +2,14 @@ package gophermart
 
 import (
 	"context"
-	"github.com/Makovey/gophermart/internal/transport/http"
+	"fmt"
 
 	"github.com/shopspring/decimal"
 
 	repoModel "github.com/Makovey/gophermart/internal/repository/model"
 	"github.com/Makovey/gophermart/internal/service"
 	"github.com/Makovey/gophermart/internal/service/adapter"
+	"github.com/Makovey/gophermart/internal/transport/http"
 	"github.com/Makovey/gophermart/internal/transport/http/model"
 )
 
@@ -32,15 +33,18 @@ func NewBalanceService(
 }
 
 func (b *balanceService) GetUsersBalance(ctx context.Context, userID string) (model.BalanceResponse, error) {
+	fn := "gophermart.GetUsersBalance"
+
 	balance, err := b.balanceRepo.GetUsersBalance(ctx, userID)
 	if err != nil {
-		return model.BalanceResponse{}, err
+		return model.BalanceResponse{}, fmt.Errorf("[%s]: %w", fn, err)
 	}
 
 	return adapter.FromRepoToBalance(balance), nil
 }
 
 func (b *balanceService) WithdrawUsersBalance(ctx context.Context, userID string, withdrawModel model.WithdrawRequest) error {
+	fn := "gophermart.WithdrawUsersBalance"
 	// выключено для тестов
 	// но, прежде чем списывать баллы, нужно убедиться, что заказ существует и пренадлежит именно этому пользователю
 	//order, err := b.orderRepo.GetOrderByID(ctx, withdrawModel.Order)
@@ -54,21 +58,21 @@ func (b *balanceService) WithdrawUsersBalance(ctx context.Context, userID string
 
 	balance, err := b.balanceRepo.GetUsersBalance(ctx, userID)
 	if err != nil {
-		return err
+		return fmt.Errorf("[%s]: %w", fn, err)
 	}
 
 	if balance.Accrual.LessThan(withdrawModel.Sum) {
-		return service.ErrNotEnoughFounds
+		return fmt.Errorf("[%s]: %w", fn, service.ErrNotEnoughFounds)
 	}
 
 	err = b.balanceRepo.DecreaseUsersBalance(ctx, userID, withdrawModel.Sum)
 	if err != nil {
-		return err
+		return fmt.Errorf("[%s]: %w", fn, err)
 	}
 
 	err = b.balanceRepo.RecordUsersWithdraw(ctx, userID, withdrawModel.Order, withdrawModel.Sum)
 	if err != nil {
-		return err
+		return fmt.Errorf("[%s]: %w", fn, err)
 	}
 
 	return nil

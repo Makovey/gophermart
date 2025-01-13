@@ -16,7 +16,7 @@ func (h handler) GetWithdrawsHistory(w http.ResponseWriter, r *http.Request) {
 
 	withdraws, err := h.historyService.GetUsersWithdrawHistory(r.Context(), userID)
 	if err != nil {
-		h.log.Error(fmt.Sprintf("%s: failed to get user withdraws", fn), "error", err.Error())
+		h.log.Error(fmt.Sprintf("[%s] failed to get user withdraws", fn), "error", err.Error())
 		h.writeResponseWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}

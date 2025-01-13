@@ -24,7 +24,7 @@ func (h handler) PostWithdraw(w http.ResponseWriter, r *http.Request) {
 
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		h.log.Info(fmt.Sprintf("%s: bad request received", fn), "error", err.Error())
+		h.log.Info(fmt.Sprintf("[%s] bad request received", fn), "error", err.Error())
 		h.writeResponseWithError(w, http.StatusBadRequest, badRequestError)
 		return
 	}
@@ -32,14 +32,14 @@ func (h handler) PostWithdraw(w http.ResponseWriter, r *http.Request) {
 	var reqModel model.WithdrawRequest
 	err = json.Unmarshal(body, &reqModel)
 	if err != nil {
-		h.log.Warn(fmt.Sprintf("%s: can't unmarshal request body", fn), "error", err.Error())
+		h.log.Warn(fmt.Sprintf("[%s] can't unmarshal request body", fn), "error", err.Error())
 		h.writeResponseWithError(w, http.StatusInternalServerError, internalError)
 		return
 	}
 
 	validate := validator.New()
 	if err = validate.Struct(reqModel); err != nil {
-		h.log.Error(fmt.Sprintf("%s: request body is incorrect", fn), "error", err.Error())
+		h.log.Error(fmt.Sprintf("[%s] request body is incorrect", fn), "error", err.Error())
 		h.writeResponseWithError(w, http.StatusBadRequest, badRequestError)
 		return
 	}

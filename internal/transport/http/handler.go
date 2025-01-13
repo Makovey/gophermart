@@ -74,7 +74,7 @@ func (h handler) writeResponseWithError(w http.ResponseWriter, statusCode int, m
 	errResp := map[string]string{"error": message}
 	err := writeJSON(w, statusCode, errResp)
 	if err != nil {
-		h.log.Error(fmt.Sprintf("%s: failed to write response:", fn), "error", err.Error())
+		h.log.Error(fmt.Sprintf("[%s] failed to write response:", fn), "error", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 }
@@ -84,7 +84,7 @@ func (h handler) writeResponse(w http.ResponseWriter, statusCode int, body any) 
 
 	err := writeJSON(w, statusCode, body)
 	if err != nil {
-		h.log.Error(fmt.Sprintf("%s: failed to write response:", fn), "error", err.Error())
+		h.log.Error(fmt.Sprintf("[%s] failed to write response:", fn), "error", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 }

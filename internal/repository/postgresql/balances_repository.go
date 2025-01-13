@@ -25,8 +25,7 @@ func (r *Repo) IncreaseUsersBalance(ctx context.Context, userID string, reward d
 		time.Now(),
 	)
 	if err != nil {
-		r.log.Error(fmt.Sprintf("%s: failed to update users balance", fn), "error", err)
-		return service.ErrExecStmt
+		return fmt.Errorf("[%s] failed to update users balance: %w", fn, service.ErrExecStmt)
 	}
 
 	return nil
@@ -43,8 +42,7 @@ func (r *Repo) DecreaseUsersBalance(ctx context.Context, userID string, withdraw
 		time.Now(),
 	)
 	if err != nil {
-		r.log.Error(fmt.Sprintf("%s: failed to update users balance", fn), "error", err)
-		return service.ErrExecStmt
+		return fmt.Errorf("[%s] failed to update users balance: %w", fn, service.ErrExecStmt)
 	}
 
 	if tag.RowsAffected() == 0 {
@@ -69,8 +67,7 @@ func (r *Repo) GetUsersBalance(ctx context.Context, userID string) (model.Balanc
 		case errors.Is(err, pgx.ErrNoRows):
 			return model.Balance{}, nil
 		default:
-			r.log.Error(fmt.Sprintf("%s: failed to query users balance", fn), "error", err)
-			return model.Balance{}, service.ErrExecStmt
+			return model.Balance{}, fmt.Errorf("[%s] failed to query users balance: %w", fn, service.ErrExecStmt)
 		}
 	}
 

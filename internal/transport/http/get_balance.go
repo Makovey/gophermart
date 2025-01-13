@@ -16,7 +16,7 @@ func (h handler) GetBalance(w http.ResponseWriter, r *http.Request) {
 
 	balance, err := h.balanceService.GetUsersBalance(r.Context(), userID)
 	if err != nil {
-		h.log.Error(fmt.Sprintf("%s: can't get users balance, userID - %s", fn, userID), "err", err.Error())
+		h.log.Error(fmt.Sprintf("[%s] can't get users balance, userID - %s", fn, userID), "err", err.Error())
 		h.writeResponseWithError(w, http.StatusInternalServerError, internalError)
 		return
 	}

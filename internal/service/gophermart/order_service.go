@@ -3,13 +3,14 @@ package gophermart
 import (
 	"context"
 	"errors"
-	"github.com/Makovey/gophermart/internal/transport/http"
+	"fmt"
 	"strconv"
 
 	repoModel "github.com/Makovey/gophermart/internal/repository/model"
 	"github.com/Makovey/gophermart/internal/service"
 	"github.com/Makovey/gophermart/internal/service/adapter"
 	"github.com/Makovey/gophermart/internal/service/luhn"
+	"github.com/Makovey/gophermart/internal/transport/http"
 	"github.com/Makovey/gophermart/internal/transport/http/model"
 )
 
@@ -42,27 +43,31 @@ func (o *orderService) ValidateOrderID(orderID string) bool {
 }
 
 func (o *orderService) ProcessNewOrder(ctx context.Context, userID, orderID string) error {
+	fn := "gophermart.ProcessNewOrder"
+
 	order, err := o.repo.GetOrderByID(ctx, orderID)
 	if err != nil {
 		switch {
 		case errors.Is(err, service.ErrNotFound):
 			return o.repo.PostNewOrder(ctx, orderID, userID)
 		default:
-			return err
+			return fmt.Errorf("[%s]: %w", fn, err)
 		}
 	}
 
 	if order.OwnerUserID != userID {
-		return service.ErrOrderConflict
+		return fmt.Errorf("[%s]: %w", fn, service.ErrOrderConflict)
 	}
 
-	return service.ErrOrderAlreadyPosted
+	return fmt.Errorf("[%s]: %w", fn, service.ErrOrderAlreadyPosted)
 }
 
 func (o *orderService) GetOrders(ctx context.Context, userID string) ([]model.OrderResponse, error) {
+	fn := "gophermart.GetOrders"
+
 	repoOrders, err := o.repo.GetOrders(ctx, userID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("[%s]: %w", fn, err)
 	}
 
 	return adapter.FromRepoToOrders(repoOrders), nil

@@ -32,7 +32,7 @@ func (a Auth) Authenticate(next http.Handler) http.Handler {
 
 		authHeader := r.Header.Get("Authorization")
 		if authHeader == "" {
-			a.log.Info(fmt.Sprintf("%s: missing authorization header", fn))
+			a.log.Info(fmt.Sprintf("[%s] missing authorization header", fn))
 			responseWithError(w, http.StatusUnauthorized, "please, login to access this resource")
 			return
 		}
@@ -41,13 +41,13 @@ func (a Auth) Authenticate(next http.Handler) http.Handler {
 		if err != nil {
 			switch {
 			case errors.Is(err, jwt.ErrParseToken):
-				a.log.Info(fmt.Sprintf("%s: failed to parse token", fn), "token", authHeader)
+				a.log.Info(fmt.Sprintf("[%s] failed to parse token", fn), "token", authHeader)
 				responseWithError(w, http.StatusInternalServerError, "internal server error, please try again")
 				return
 			case errors.Is(err, jwt.ErrSigningMethod),
 				errors.Is(err, jwt.ErrInvalidToken),
 				errors.Is(err, jwt.ErrTokenExpired):
-				a.log.Info(fmt.Sprintf("%s: token is invalid", fn), "token", authHeader)
+				a.log.Info(fmt.Sprintf("[%s] token is invalid", fn), "token", authHeader)
 				responseWithError(w, http.StatusUnauthorized, "please, relogin again, to get access to this resource")
 				return
 			}

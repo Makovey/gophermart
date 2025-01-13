@@ -51,7 +51,7 @@ func (c *HTTPClient) RegisterNewGoods(ctx context.Context) error {
 
 	goodsData, err := json.Marshal(goods)
 	if err != nil {
-		c.log.Error(fmt.Sprintf("%s: can't marshal goods data", fn), "error", err.Error())
+		c.log.Error(fmt.Sprintf("[%s] can't marshal goods data", fn), "error", err.Error())
 		return err
 	}
 
@@ -62,7 +62,7 @@ func (c *HTTPClient) RegisterNewGoods(ctx context.Context) error {
 		bytes.NewReader(goodsData),
 	)
 	if err != nil {
-		c.log.Error(fmt.Sprintf("%s: can't create request", fn), "error", err.Error())
+		c.log.Error(fmt.Sprintf("[%s] can't create request", fn), "error", err.Error())
 		return err
 	}
 
@@ -70,7 +70,7 @@ func (c *HTTPClient) RegisterNewGoods(ctx context.Context) error {
 
 	resp, err := c.http.Do(req)
 	if err != nil {
-		c.log.Error(fmt.Sprintf("%s: can't do request", fn), "error", err.Error())
+		c.log.Error(fmt.Sprintf("[%s] can't do request", fn), "error", err.Error())
 		return err
 	}
 	defer resp.Body.Close()
@@ -97,7 +97,7 @@ func (c *HTTPClient) RegisterNewOrder(ctx context.Context, orderID string) error
 
 	detailsData, err := json.Marshal(details)
 	if err != nil {
-		c.log.Error(fmt.Sprintf("%s: can't marshal order details data", fn), "error", err.Error())
+		c.log.Error(fmt.Sprintf("[%s] can't marshal order details data", fn), "error", err.Error())
 		return err
 	}
 
@@ -108,7 +108,7 @@ func (c *HTTPClient) RegisterNewOrder(ctx context.Context, orderID string) error
 		bytes.NewReader(detailsData),
 	)
 	if err != nil {
-		c.log.Error(fmt.Sprintf("%s: can't create request", fn), "error", err.Error())
+		c.log.Error(fmt.Sprintf("[%s] can't create request", fn), "error", err.Error())
 		return err
 	}
 
@@ -116,7 +116,7 @@ func (c *HTTPClient) RegisterNewOrder(ctx context.Context, orderID string) error
 
 	resp, err := c.http.Do(req)
 	if err != nil {
-		c.log.Error(fmt.Sprintf("%s: can't do request", fn), "error", err.Error())
+		c.log.Error(fmt.Sprintf("[%s] can't do request", fn), "error", err.Error())
 		return err
 	}
 	defer resp.Body.Close()
@@ -142,23 +142,23 @@ func (c *HTTPClient) UpdateOrderStatus(ctx context.Context, orderID string) (mod
 		nil,
 	)
 	if err != nil {
-		c.log.Error(fmt.Sprintf("%s: can't create request", fn), "error", err.Error())
+		c.log.Error(fmt.Sprintf("[%s] can't create request", fn), "error", err.Error())
 		return model.OrderStatus{}, err
 	}
 
 	resp, err := c.http.Do(req)
 	if err != nil {
-		c.log.Error(fmt.Sprintf("%s: can't do request", fn), "error", err.Error())
+		c.log.Error(fmt.Sprintf("[%s] can't do request", fn), "error", err.Error())
 		return model.OrderStatus{}, err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode == http.StatusTooManyRequests {
-		c.log.Error(fmt.Sprintf("%s: response status %s", fn, resp.Status), "err", "too many requests")
+		c.log.Error(fmt.Sprintf("[%s] response status %s", fn, resp.Status), "err", "too many requests")
 		after := resp.Header.Get("Retry-After")
 		duration, err := time.ParseDuration(after)
 		if err != nil {
-			c.log.Error(fmt.Sprintf("%s: can't parse retry duration", fn), "error", err.Error())
+			c.log.Error(fmt.Sprintf("[%s] can't parse retry duration", fn), "error", err.Error())
 			return model.OrderStatus{}, err
 		}
 		return model.OrderStatus{}, &ManyRequestError{RetryAfter: duration}
@@ -167,12 +167,12 @@ func (c *HTTPClient) UpdateOrderStatus(ctx context.Context, orderID string) (mod
 	var orderStatus model.OrderStatus
 	b, err := io.ReadAll(resp.Body)
 	if err != nil {
-		c.log.Error(fmt.Sprintf("%s: can't read response body", fn), "error", err.Error())
+		c.log.Error(fmt.Sprintf("[%s] can't read response body", fn), "error", err.Error())
 		return model.OrderStatus{}, err
 	}
 
 	if err = json.Unmarshal(b, &orderStatus); err != nil {
-		c.log.Error(fmt.Sprintf("%s: can't unmarshal response body", fn), "error", err.Error())
+		c.log.Error(fmt.Sprintf("[%s] can't unmarshal response body", fn), "error", err.Error())
 		return model.OrderStatus{}, err
 	}
 

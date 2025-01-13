@@ -41,7 +41,7 @@ func (j JWT) ParseUserID(tokenString string) (string, error) {
 	var claims Claims
 	token, err := jwt.ParseWithClaims(tokenString, &claims, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			j.log.Warn(fmt.Sprintf("%s: unexpected signing method", fn), "current token", token.Header["alg"])
+			j.log.Warn(fmt.Sprintf("[%s] unexpected signing method", fn), "current token", token.Header["alg"])
 			return nil, ErrSigningMethod
 		}
 
@@ -53,12 +53,12 @@ func (j JWT) ParseUserID(tokenString string) (string, error) {
 			return "", ErrTokenExpired
 		}
 
-		j.log.Warn(fmt.Sprintf("%s: failed to parse token", fn), "error", err.Error())
+		j.log.Warn(fmt.Sprintf("[%s] failed to parse token", fn), "error", err.Error())
 		return "", ErrParseToken
 	}
 
 	if !token.Valid {
-		j.log.Warn(fmt.Sprintf("%s: token is invalid", fn))
+		j.log.Warn(fmt.Sprintf("[%s] token is invalid", fn))
 		return "", ErrInvalidToken
 	}
 
@@ -77,7 +77,7 @@ func (j JWT) BuildNewJWT(userID string) (string, error) {
 
 	tokenString, err := token.SignedString([]byte(os.Getenv("gophermart_key")))
 	if err != nil {
-		j.log.Warn(fmt.Sprintf("%s: can't sign token", fn), "error", err.Error())
+		j.log.Warn(fmt.Sprintf("[%s] can't sign token", fn), "error", err.Error())
 		return "", err
 	}
 

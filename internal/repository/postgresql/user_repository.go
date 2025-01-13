@@ -29,13 +29,13 @@ func (r *Repo) RegisterNewUser(ctx context.Context, user model.RegisterUser) err
 		time.Now(),
 	)
 	if err != nil {
-		r.log.Error(fmt.Sprintf("%s: failed to execute new user", fn), "error", err)
+		r.log.Error(fmt.Sprintf("[%s] failed to execute new user", fn), "error", err)
 		var pgErr *pgconn.PgError
 		if ok := errors.As(err, &pgErr); ok && pgErr.Code == errUniqueViolatesCode {
-			return service.ErrLoginIsAlreadyExist
+			return fmt.Errorf("[%s]: %w", fn, service.ErrLoginIsAlreadyExist)
 		}
 
-		return service.ErrExecStmt
+		return fmt.Errorf("[%s]: %w", fn, service.ErrExecStmt)
 	}
 
 	return nil
@@ -55,11 +55,9 @@ func (r *Repo) LoginUser(ctx context.Context, login string) (model.RegisterUser,
 	if err != nil {
 		switch {
 		case errors.Is(err, pgx.ErrNoRows):
-			r.log.Info(fmt.Sprintf("%s: user with login %s not found", fn, login))
-			return model.RegisterUser{}, service.ErrNotFound
+			return model.RegisterUser{}, fmt.Errorf("[%s]: %w", fn, service.ErrNotFound)
 		default:
-			r.log.Error(fmt.Sprintf("%s: failed to query user", fn), "error", err)
-			return model.RegisterUser{}, service.ErrExecStmt
+			return model.RegisterUser{}, fmt.Errorf("[%s]: %w", fn, service.ErrExecStmt)
 		}
 	}
 

@@ -22,8 +22,7 @@ func (r *Repo) RecordUsersWithdraw(ctx context.Context, userID, orderID string, 
 		time.Now(),
 	)
 	if err != nil {
-		r.log.Error(fmt.Sprintf("%s: failed to post history stamp", fn), "error", err)
-		return service.ErrExecStmt
+		return fmt.Errorf("[%s] failed to post history stamp: %w", fn, service.ErrExecStmt)
 	}
 
 	return nil
@@ -39,8 +38,7 @@ func (r *Repo) GetUsersHistory(ctx context.Context, userID string) ([]model.With
 		userID,
 	)
 	if err != nil {
-		r.log.Error(fmt.Sprintf("%s: failed to query history withdraw", fn), "error", err)
-		return nil, err
+		return nil, fmt.Errorf("[%s] failed to query history withdraw: %w", fn, err)
 	}
 	defer rows.Close()
 
@@ -49,15 +47,13 @@ func (r *Repo) GetUsersHistory(ctx context.Context, userID string) ([]model.With
 		var withdraw model.Withdraw
 		err = rows.Scan(&withdraw.OrderID, &withdraw.Withdraw, &withdraw.CreatedAt)
 		if err != nil {
-			r.log.Error(fmt.Sprintf("%s: failed to scan history withdraw", fn), "error", err)
-			return nil, err
+			return nil, fmt.Errorf("[%s] failed to query history withdraw: %w", fn, err)
 		}
 		withdraws = append(withdraws, withdraw)
 	}
 
 	if err = rows.Err(); err != nil {
-		r.log.Error(fmt.Sprintf("%s: failed to iterate history withdraw", fn), "error", err)
-		return nil, err
+		return nil, fmt.Errorf("[%s] failed to iterate history withdraw: %w", fn, err)
 	}
 
 	return withdraws, nil

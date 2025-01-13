@@ -27,7 +27,7 @@ func main() {
 	}
 
 	serv := gophermart.NewGophermartService(
-		gophermart.NewUserService(repo, log, jwt),
+		gophermart.NewUserService(repo, jwt),
 		gophermart.NewOrderService(repo),
 		gophermart.NewBalanceService(repo),
 		gophermart.NewHistoryService(repo),

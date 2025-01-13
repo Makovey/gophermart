@@ -23,7 +23,7 @@ func newEnvConfig(log logger.Logger) envConfig {
 	var cfg envConfig
 	err := env.Parse(&cfg)
 	if err != nil {
-		log.Error(fmt.Sprintf("%s: could not parse environment variables", fn), "error", err)
+		log.Error(fmt.Sprintf("[%s] could not parse environment variables", fn), "error", err)
 	}
 
 	return cfg

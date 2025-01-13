@@ -70,10 +70,10 @@ func (w *worker) runFetchingProcess(
 		case <-w.ticker.C:
 			err := w.repo.FetchNewOrdersToChan(ctx, orders)
 			if err != nil {
-				w.log.Error(fmt.Sprintf("%s: failed to fetch new orders", fn))
+				w.log.Error(fmt.Sprintf("[%s] failed to fetch new orders", fn))
 			}
 		case <-ctx.Done():
-			w.log.Debug(fmt.Sprintf("%s: stopping fetching process, context is closed", fn))
+			w.log.Debug(fmt.Sprintf("[%s] stopping fetching process, context is closed", fn))
 			close(orders)
 			return
 		}
@@ -84,7 +84,7 @@ func (w *worker) registerNewGoods(ctx context.Context) {
 	fn := "worker.registerNewGoods"
 
 	if err := w.client.RegisterNewGoods(ctx); err != nil {
-		w.log.Error(fmt.Sprintf("%s: failed to register new goods", fn))
+		w.log.Error(fmt.Sprintf("[%s] failed to register new goods", fn))
 	}
 }
 
@@ -96,7 +96,7 @@ func (w *worker) runUpdatingProcess(ctx context.Context, orders <-chan repoModel
 	for order := range orders {
 		if err := w.client.RegisterNewOrder(ctx, order.OrderID); err != nil {
 			if !errors.Is(err, service.ErrOrderAlreadyRegistered) {
-				w.log.Error(fmt.Sprintf("%s: failed to register new order", fn), "error", err.Error())
+				w.log.Error(fmt.Sprintf("[%s] failed to register new order", fn), "error", err.Error())
 				continue
 			}
 		}
@@ -113,18 +113,18 @@ func (w *worker) runUpdatingProcess(ctx context.Context, orders <-chan repoModel
 			go func(order repoModel.Order, retryAfter time.Duration) {
 				select {
 				case <-ctx.Done():
-					w.log.Info(fmt.Sprintf("%s: context cancelled before retrying order %s", fn, order.OrderID))
+					w.log.Info(fmt.Sprintf("[%s] context cancelled before retrying order %s", fn, order.OrderID))
 					return
 				case <-time.After(retryAfter + time.Second):
 					retryRes, retryErr := w.client.UpdateOrderStatus(ctx, order.OrderID)
 					if retryErr != nil {
-						w.log.Error(fmt.Sprintf("%s: retried methods is failed", fn), "error", retryErr)
+						w.log.Error(fmt.Sprintf("[%s] retried methods is failed", fn), "error", retryErr)
 					}
 					w.updateOrderInfo(ctx, retryRes, order.OwnerUserID)
 				}
 			}(order, manyReqErr.RetryAfter)
 		default:
-			w.log.Error(fmt.Sprintf("%s: failed to update order status", fn), "error", err)
+			w.log.Error(fmt.Sprintf("[%s] failed to update order status", fn), "error", err)
 		}
 	}
 }
@@ -132,18 +132,18 @@ func (w *worker) runUpdatingProcess(ctx context.Context, orders <-chan repoModel
 func (w *worker) updateOrderInfo(ctx context.Context, status model.OrderStatus, userID string) {
 	fn := "worker.updateOrderInfo"
 	if ctx.Err() != nil {
-		w.log.Error(fmt.Sprintf("%s: can't update order info", fn), "error", ctx.Err().Error())
+		w.log.Error(fmt.Sprintf("[%s] can't update order info", fn), "error", ctx.Err().Error())
 		return
 	}
 
 	err := w.repo.UpdateOrder(ctx, repoModel.OrderStatus{OrderID: status.OrderID, Status: status.Status, Accrual: status.Accrual})
 	if err != nil {
-		w.log.Error(fmt.Sprintf("%s: failed to update order info", fn), "error", err)
+		w.log.Error(fmt.Sprintf("[%s] failed to update order info", fn), "error", err)
 	}
 
 	err = w.repo.IncreaseUsersBalance(ctx, userID, status.Accrual)
 	if err != nil {
-		w.log.Error(fmt.Sprintf("%s: failed to update users balance", fn), "error", err)
+		w.log.Error(fmt.Sprintf("[%s] failed to update users balance", fn), "error", err)
 	}
 }
 

@@ -16,6 +16,10 @@ func (f FloatDecimal) MarshalJSON() ([]byte, error) {
 }
 
 func (f *FloatDecimal) UnmarshalJSON(data []byte) error {
+	if f == nil {
+		return nil
+	}
+
 	var floatVal float64
 	if err := json.Unmarshal(data, &floatVal); err == nil {
 		*f = FloatDecimal(decimal.NewFromFloat(floatVal))

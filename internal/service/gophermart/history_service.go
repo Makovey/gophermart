@@ -2,6 +2,7 @@ package gophermart
 
 import (
 	"context"
+	"fmt"
 	"github.com/Makovey/gophermart/internal/transport/http"
 
 	repoModel "github.com/Makovey/gophermart/internal/repository/model"
@@ -27,9 +28,11 @@ func NewHistoryService(
 }
 
 func (h *historyService) GetUsersWithdrawHistory(ctx context.Context, userID string) ([]model.WithdrawHistoryResponse, error) {
+	fn := "gophermart.GetUsersWithdrawHistory"
+
 	history, err := h.repo.GetUsersHistory(ctx, userID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("[%s]: %w", fn, err)
 	}
 
 	return adapter.FromRepoToHistoryWithdraws(history), nil

@@ -25,11 +25,9 @@ func (r *Repo) GetOrderByID(ctx context.Context, orderID string) (model.Order, e
 	if err != nil {
 		switch {
 		case errors.Is(err, pgx.ErrNoRows):
-			r.log.Info(fmt.Sprintf("%s: user with order %s not found", fn, orderID))
-			return model.Order{}, service.ErrNotFound
+			return model.Order{}, fmt.Errorf("[%s] user with order %s not found: %w", fn, orderID, service.ErrNotFound)
 		default:
-			r.log.Error(fmt.Sprintf("%s: failed to query user", fn), "error", err)
-			return model.Order{}, service.ErrExecStmt
+			return model.Order{}, fmt.Errorf("[%s] failed to query user : %w", fn, service.ErrExecStmt)
 		}
 	}
 	return order, nil
@@ -46,8 +44,7 @@ func (r *Repo) PostNewOrder(ctx context.Context, orderID, userID string) error {
 		time.Now(),
 	)
 	if err != nil {
-		r.log.Error(fmt.Sprintf("%s: failed to post new order", fn), "error", err)
-		return service.ErrExecStmt
+		return fmt.Errorf("[%s] failed to insert user : %w", fn, service.ErrExecStmt)
 	}
 
 	return nil
@@ -62,8 +59,7 @@ func (r *Repo) GetOrders(ctx context.Context, userID string) ([]model.Order, err
 		userID,
 	)
 	if err != nil {
-		r.log.Error(fmt.Sprintf("%s: failed to query orders", fn), "error", err)
-		return nil, err
+		return nil, fmt.Errorf("[%s] failed to query orders: %w", fn, err)
 	}
 	defer rows.Close()
 
@@ -72,15 +68,13 @@ func (r *Repo) GetOrders(ctx context.Context, userID string) ([]model.Order, err
 		var order model.Order
 		err = rows.Scan(&order.OrderID, &order.OwnerUserID, &order.Status, &order.Accrual, &order.CreatedAt)
 		if err != nil {
-			r.log.Error(fmt.Sprintf("%s: failed to scan orders", fn), "error", err)
-			return nil, err
+			return nil, fmt.Errorf("[%s] failed to scan orders: %w", fn, err)
 		}
 		orders = append(orders, order)
 	}
 
 	if err = rows.Err(); err != nil {
-		r.log.Error(fmt.Sprintf("%s: failed to iterate orders", fn), "error", err)
-		return nil, err
+		return nil, fmt.Errorf("[%s] failed to iterate orders: %w", fn, err)
 	}
 
 	return orders, nil
@@ -94,8 +88,7 @@ func (r *Repo) FetchNewOrdersToChan(ctx context.Context, ordersCh chan<- model.O
 		`SELECT * FROM gophermart_orders WHERE status = 'NEW' OR status = 'PROCESSING' ORDER BY created_at`,
 	)
 	if err != nil {
-		r.log.Error(fmt.Sprintf("%s: failed to query orders", fn), "error", err)
-		return err
+		return fmt.Errorf("[%s] failed to query orders: %w", fn, err)
 	}
 	defer rows.Close()
 
@@ -103,16 +96,14 @@ func (r *Repo) FetchNewOrdersToChan(ctx context.Context, ordersCh chan<- model.O
 		var order model.Order
 		err = rows.Scan(&order.OrderID, &order.OwnerUserID, &order.Status, &order.Accrual, &order.CreatedAt)
 		if err != nil {
-			r.log.Error(fmt.Sprintf("%s: failed to scan orders", fn), "error", err)
-			return err
+			return fmt.Errorf("[%s] failed to scan orders: %w", fn, err)
 		}
 
 		ordersCh <- order
 	}
 
 	if err = rows.Err(); err != nil {
-		r.log.Error(fmt.Sprintf("%s: failed to iterate orders", fn), "error", err)
-		return err
+		return fmt.Errorf("[%s] failed to iterate orders: %w", fn, err)
 	}
 
 	return nil
@@ -129,13 +120,11 @@ func (r *Repo) UpdateOrder(ctx context.Context, status model.OrderStatus) error 
 		status.OrderID,
 	)
 	if err != nil {
-		r.log.Error(fmt.Sprintf("%s: failed to update order", fn), "error", err)
-		return service.ErrExecStmt
+		return fmt.Errorf("[%s]: failed to update order: %w", fn, service.ErrExecStmt)
 	}
 
 	if res.RowsAffected() == 0 {
-		r.log.Error(fmt.Sprintf("%s: didn't find order id, rows not affected", fn))
-		return service.ErrNotFound
+		return fmt.Errorf("[%s] didn't find order id, rows not affected: %w", fn, service.ErrNotFound)
 	}
 
 	return nil

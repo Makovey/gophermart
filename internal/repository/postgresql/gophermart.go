@@ -28,17 +28,17 @@ func NewPostgresRepo(log logger.Logger, cfg config.Config) (*Repo, error) {
 
 	path, err := filepath.Abs(migrationPath)
 	if err != nil {
-		return nil, fmt.Errorf("[%s]: could not determine absolute path for migrations: %w", fn, err)
+		return nil, fmt.Errorf("[%s] could not determine absolute path for migrations: %w", fn, err)
 	}
 
 	err = upMigrations(cfg.DatabaseURI(), path)
 	if err != nil {
-		return nil, fmt.Errorf("[%s]: could not up migrations: %w", fn, err)
+		return nil, fmt.Errorf("[%s] could not up migrations: %w", fn, err)
 	}
 
 	conn, err := pgxpool.New(context.Background(), cfg.DatabaseURI())
 	if err != nil {
-		return nil, fmt.Errorf("[%s]: could not connect to database: %w", fn, err)
+		return nil, fmt.Errorf("[%s] could not connect to database: %w", fn, err)
 	}
 
 	return &Repo{
