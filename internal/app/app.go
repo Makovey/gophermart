@@ -9,6 +9,7 @@ import (
 	"os/signal"
 	"path/filepath"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/Makovey/gophermart/internal/service/worker"
@@ -33,7 +34,7 @@ func (a *App) InitDependencies() error {
 }
 
 func (a *App) Run() {
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, os.Kill)
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, os.Kill, syscall.SIGTERM)
 	defer stop()
 
 	readyCh := make(chan struct{})
@@ -127,7 +128,7 @@ func (a *App) runHTTPServer(ctx context.Context) {
 	<-ctx.Done()
 	a.logger.Debug("shutting down http server")
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancel()
 
 	if err := a.CloseAll(); err != nil {

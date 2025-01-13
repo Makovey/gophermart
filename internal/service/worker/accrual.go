@@ -83,46 +83,38 @@ func (w *worker) runUpdatingProcess(ctx context.Context, orders <-chan repoModel
 	w.wg.Add(1)
 	defer w.wg.Done()
 
-	for {
-		select {
-		case <-ctx.Done():
-			w.log.Debug(fmt.Sprintf("%s: stopping updating process, context is closed", fn))
-			return
-		case order, ok := <-orders:
-			if !ok {
-				w.log.Debug(fmt.Sprintf("%s: stopping updating process, channel is closed", fn))
-				return
-			}
-			if err := w.client.RegisterNewOrder(ctx, order.OrderID); err != nil {
+	for order := range orders {
+		if err := w.client.RegisterNewOrder(ctx, order.OrderID); err != nil {
+			if !errors.Is(err, service.ErrOrderAlreadyRegistered) {
 				w.log.Error(fmt.Sprintf("%s: failed to register new order", fn), "error", err.Error())
 				continue
 			}
+		}
 
-			res, err := w.client.UpdateOrderStatus(ctx, order.OrderID)
-			if err == nil {
-				w.updateOrderInfo(ctx, res, order.OwnerUserID)
-				continue
-			}
+		status, err := w.client.UpdateOrderStatus(ctx, order.OrderID)
+		if err == nil {
+			w.updateOrderInfo(ctx, status, order.OwnerUserID)
+			continue
+		}
 
-			var manyReqErr *accrual.ManyRequestError
-			switch {
-			case errors.As(err, &manyReqErr):
-				go func(order repoModel.Order, retryAfter time.Duration) {
-					select {
-					case <-ctx.Done():
-						w.log.Info(fmt.Sprintf("%s: context cancelled before retrying order %s", fn, order.OrderID))
-						return
-					case <-time.After(retryAfter + time.Second):
-						retryRes, retryErr := w.client.UpdateOrderStatus(ctx, order.OrderID)
-						if retryErr != nil {
-							w.log.Error(fmt.Sprintf("%s: retried methods is failed", fn), "error", retryErr)
-						}
-						w.updateOrderInfo(ctx, retryRes, order.OwnerUserID)
+		var manyReqErr *accrual.ManyRequestError
+		switch {
+		case errors.As(err, &manyReqErr):
+			go func(order repoModel.Order, retryAfter time.Duration) {
+				select {
+				case <-ctx.Done():
+					w.log.Info(fmt.Sprintf("%s: context cancelled before retrying order %s", fn, order.OrderID))
+					return
+				case <-time.After(retryAfter + time.Second):
+					retryRes, retryErr := w.client.UpdateOrderStatus(ctx, order.OrderID)
+					if retryErr != nil {
+						w.log.Error(fmt.Sprintf("%s: retried methods is failed", fn), "error", retryErr)
 					}
-				}(order, manyReqErr.RetryAfter)
-			default:
-				w.log.Error(fmt.Sprintf("%s: failed to update order status", fn), "error", err)
-			}
+					w.updateOrderInfo(ctx, retryRes, order.OwnerUserID)
+				}
+			}(order, manyReqErr.RetryAfter)
+		default:
+			w.log.Error(fmt.Sprintf("%s: failed to update order status", fn), "error", err)
 		}
 	}
 }

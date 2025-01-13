@@ -14,6 +14,7 @@ import (
 
 	"github.com/Makovey/gophermart/internal/config"
 	"github.com/Makovey/gophermart/internal/logger"
+	"github.com/Makovey/gophermart/internal/service"
 	"github.com/Makovey/gophermart/internal/transport/accrual/model"
 	"github.com/Makovey/gophermart/internal/types"
 )
@@ -119,6 +120,10 @@ func (c *HTTPClient) RegisterNewOrder(ctx context.Context, orderID string) error
 		return err
 	}
 	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusConflict {
+		return service.ErrOrderAlreadyRegistered
+	}
 
 	if resp.StatusCode != http.StatusAccepted {
 		return fmt.Errorf("expected status code - %d, actual - %d", http.StatusAccepted, resp.StatusCode)
