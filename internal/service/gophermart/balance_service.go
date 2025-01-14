@@ -4,9 +4,9 @@ import (
 	"context"
 
 	"github.com/Makovey/gophermart/internal/service"
+	"github.com/Makovey/gophermart/internal/service/adapter"
 	"github.com/Makovey/gophermart/internal/transport"
 	"github.com/Makovey/gophermart/internal/transport/http/model"
-	"github.com/Makovey/gophermart/internal/types"
 )
 
 type balanceService struct {
@@ -31,10 +31,7 @@ func (b *balanceService) GetUsersBalance(ctx context.Context, userID string) (mo
 		return model.BalanceResponse{}, err
 	}
 
-	return model.BalanceResponse{
-		Current:   types.FloatDecimal(balance.Accrual),
-		Withdrawn: types.FloatDecimal(balance.Withdrawn),
-	}, nil
+	return adapter.FromRepoToBalance(balance), nil
 }
 
 func (b *balanceService) WithdrawUsersBalance(ctx context.Context, userID string, withdrawModel model.WithdrawRequest) error {
