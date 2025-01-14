@@ -1,7 +1,15 @@
 package main
 
-import "github.com/Makovey/gophermart/internal/app"
+import (
+	"log"
+
+	"github.com/Makovey/gophermart/internal/app"
+)
 
 func main() {
-	app.NewApp().Run()
+	appl := app.NewApp()
+	if err := appl.InitDependencies(); err != nil {
+		log.Fatalf("critical dependencies initialized with error: %v", err.Error())
+	}
+	appl.Run()
 }
