@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS gophermart_balances (
     owner_user_id varchar(100) UNIQUE REFERENCES gophermart_users(user_id),
     accrual DECIMAL,
     withdrawn DECIMAL DEFAULT 0,
-    updated_at TIMESTAMP DEFAULT (current_timestamp AT TIME ZONE 'Europe/Moscow')
+    updated_at TIMESTAMP NOT NULL
 );
 -- +goose StatementEnd
 
