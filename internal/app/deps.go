@@ -28,65 +28,56 @@ func newDeps() *deps {
 	return &deps{}
 }
 
-func (d *deps) initDependencies() error {
-	log := d.makeLogger()
-	cfg := d.makeConfig(log)
-	jwt := d.makeJWT(log)
-
-	repo, err := d.makeRepository(log, cfg)
-	if err != nil {
-		return err
+func (p *deps) Logger() logger.Logger {
+	if p.logger == nil {
+		p.logger = slog.NewLogger(slog.Local)
 	}
 
-	serv := d.makeService(repo, log, jwt)
-	d.makeHandler(log, serv)
-
-	return nil
+	return p.logger
 }
 
-func (d *deps) makeLogger() logger.Logger {
-	d.logger = slog.NewLogger(slog.Local)
-	return d.logger
-}
-
-func (d *deps) makeService(
-	repo service.GophermartRepository,
-	logger logger.Logger,
-	jwt *jwt.JWT,
-) transport.GophermartService {
-	d.service = gophermart.NewGophermartService(repo, logger, jwt)
-	return d.service
-}
-
-func (d *deps) makeRepository(
-	logger logger.Logger,
-	cfg config.Config,
-) (service.GophermartRepository, error) {
-	repo, err := postgresql.NewPostgresRepo(logger, cfg)
-	if err != nil {
-		return nil, err
+func (p *deps) Service() transport.GophermartService {
+	if p.service == nil {
+		p.service = gophermart.NewGophermartService(p.Repository(), p.Logger(), p.JWT())
 	}
-	d.repo = repo
-	return d.repo, nil
+
+	return p.service
 }
 
-func (d *deps) makeHandler(logger logger.Logger, service transport.GophermartService) transport.HTTPHandler {
-	d.handler = http.NewHTTPHandler(logger, service)
-	return d.handler
+func (p *deps) Repository() service.GophermartRepository {
+	if p.repo == nil {
+		p.repo, _ = postgresql.NewPostgresRepo(p.Logger(), p.Config())
+	}
+
+	return p.repo
 }
 
-func (d *deps) makeConfig(logger logger.Logger) config.Config {
-	d.cfg = config.NewConfig(logger)
-	return d.cfg
+func (p *deps) Handler() transport.HTTPHandler {
+	if p.handler == nil {
+		p.handler = http.NewHTTPHandler(p.Logger(), p.Service())
+	}
+
+	return p.handler
 }
 
-func (d *deps) makeJWT(logger logger.Logger) *jwt.JWT {
-	d.jwt = jwt.NewJWT(logger)
-	return d.jwt
+func (p *deps) Config() config.Config {
+	if p.cfg == nil {
+		p.cfg = config.NewConfig(p.Logger())
+	}
+
+	return p.cfg
 }
 
-func (d *deps) CloseAll() error {
-	if closer, ok := d.repo.(io.Closer); ok {
+func (p *deps) JWT() *jwt.JWT {
+	if p.jwt == nil {
+		p.jwt = jwt.NewJWT(p.Logger())
+	}
+
+	return p.jwt
+}
+
+func (p *deps) CloseAll() error {
+	if closer, ok := p.Repository().(io.Closer); ok {
 		return closer.Close()
 	}
 
