@@ -46,7 +46,7 @@ func (p *deps) Service() transport.GophermartService {
 
 func (p *deps) Repository() service.GophermartRepository {
 	if p.repo == nil {
-		p.repo = postgresql.NewPostgresRepo(p.Logger(), p.Config())
+		p.repo, _ = postgresql.NewPostgresRepo(p.Logger(), p.Config())
 	}
 
 	return p.repo
