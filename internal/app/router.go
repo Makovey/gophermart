@@ -15,20 +15,20 @@ func (a *App) initRouter() http.Handler {
 	r.Use(chiMiddleware.Recoverer)
 	r.Use(middleware.NewCompressor().Compress)
 
-	r.Post("/api/user/register", a.Handler().RegisterUser)
-	r.Post("/api/user/login", a.Handler().LoginUser)
+	r.Post("/api/user/register", a.deps.Handler().RegisterUser)
+	r.Post("/api/user/login", a.deps.Handler().LoginUser)
 
 	r.Group(func(r chi.Router) {
-		authMiddleware := middleware.NewAuth(a.JWT(), a.Logger())
+		authMiddleware := middleware.NewAuth(a.deps.JWT(), a.deps.Logger())
 
 		r.Use(authMiddleware.Authenticate)
-		r.Get("/api/user/orders", a.Handler().GetOrders)
-		r.Post("/api/user/orders", a.Handler().PostOrder)
+		r.Get("/api/user/orders", a.deps.Handler().GetOrders)
+		r.Post("/api/user/orders", a.deps.Handler().PostOrder)
 
-		r.Get("/api/user/balance", a.Handler().GetBalance)
-		r.Post("/api/user/balance/withdraw", a.Handler().PostWithdraw)
+		r.Get("/api/user/balance", a.deps.Handler().GetBalance)
+		r.Post("/api/user/balance/withdraw", a.deps.Handler().PostWithdraw)
 
-		r.Get("/api/user/withdrawals", a.Handler().GetWithdrawsHistory)
+		r.Get("/api/user/withdrawals", a.deps.Handler().GetWithdrawsHistory)
 	})
 
 	return r
