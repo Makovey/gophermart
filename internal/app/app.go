@@ -95,7 +95,6 @@ func (a *App) runAccrualSystem(ctx context.Context, ready chan<- struct{}) {
 	fullPath, err := filepath.Abs(fileLoc)
 	if err != nil {
 		a.logger.Error(fmt.Sprintf("can't abs absolute path from: %s", fullPath), "error", err.Error())
-		return
 	}
 
 	cmd := exec.Command(fullPath, accrualSystemAddrFlag, port)
@@ -104,7 +103,6 @@ func (a *App) runAccrualSystem(ctx context.Context, ready chan<- struct{}) {
 	err = cmd.Start()
 	if err != nil {
 		a.logger.Error("can't run accrual system", "err", err.Error())
-		return
 	}
 
 	time.AfterFunc(time.Second, func() {
