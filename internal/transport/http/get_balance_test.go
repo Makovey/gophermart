@@ -13,7 +13,6 @@ import (
 
 	"github.com/Makovey/gophermart/internal/logger/dummy"
 	"github.com/Makovey/gophermart/internal/middleware"
-	"github.com/Makovey/gophermart/internal/service/gophermart"
 	"github.com/Makovey/gophermart/internal/service/mocks"
 	"github.com/Makovey/gophermart/internal/transport/http/model"
 )
@@ -48,7 +47,7 @@ func TestGetBalanceHandler(t *testing.T) {
 				getBalanceCall: true,
 			},
 			params: params{
-				authToken: uuid.NewString()[:gophermart.UserIDLength],
+				authToken: uuid.NewString(),
 			},
 		},
 		{
@@ -69,7 +68,7 @@ func TestGetBalanceHandler(t *testing.T) {
 				balanceErr:     errors.New("service error"),
 			},
 			params: params{
-				authToken: uuid.NewString()[:gophermart.UserIDLength],
+				authToken: uuid.NewString(),
 			},
 		},
 	}

@@ -14,7 +14,6 @@ import (
 	"github.com/Makovey/gophermart/internal/logger/dummy"
 	"github.com/Makovey/gophermart/internal/middleware"
 	"github.com/Makovey/gophermart/internal/service"
-	"github.com/Makovey/gophermart/internal/service/gophermart"
 	"github.com/Makovey/gophermart/internal/service/mocks"
 	"github.com/golang/mock/gomock"
 )
@@ -54,7 +53,7 @@ func TestPostOrderHandler(t *testing.T) {
 			},
 			params: params{
 				body:      strings.NewReader("12345678903"),
-				authToken: uuid.NewString()[:gophermart.UserIDLength],
+				authToken: uuid.NewString(),
 			},
 		},
 		{
@@ -75,7 +74,7 @@ func TestPostOrderHandler(t *testing.T) {
 			expects: expects{},
 			params: params{
 				body:      errReader(0),
-				authToken: uuid.NewString()[:gophermart.UserIDLength],
+				authToken: uuid.NewString(),
 			},
 		},
 		{
@@ -86,7 +85,7 @@ func TestPostOrderHandler(t *testing.T) {
 			expects: expects{},
 			params: params{
 				body:      strings.NewReader(""),
-				authToken: uuid.NewString()[:gophermart.UserIDLength],
+				authToken: uuid.NewString(),
 			},
 		},
 		{
@@ -99,7 +98,7 @@ func TestPostOrderHandler(t *testing.T) {
 			},
 			params: params{
 				body:      strings.NewReader("1221"),
-				authToken: uuid.NewString()[:gophermart.UserIDLength],
+				authToken: uuid.NewString(),
 			},
 		},
 		{
@@ -115,7 +114,7 @@ func TestPostOrderHandler(t *testing.T) {
 			},
 			params: params{
 				body:      strings.NewReader("12345678903"),
-				authToken: uuid.NewString()[:gophermart.UserIDLength],
+				authToken: uuid.NewString(),
 			},
 		},
 		{
@@ -131,7 +130,7 @@ func TestPostOrderHandler(t *testing.T) {
 			},
 			params: params{
 				body:      strings.NewReader("12345678903"),
-				authToken: uuid.NewString()[:gophermart.UserIDLength],
+				authToken: uuid.NewString(),
 			},
 		},
 		{
@@ -147,7 +146,7 @@ func TestPostOrderHandler(t *testing.T) {
 			},
 			params: params{
 				body:      strings.NewReader("12345678903"),
-				authToken: uuid.NewString()[:gophermart.UserIDLength],
+				authToken: uuid.NewString(),
 			},
 		},
 	}

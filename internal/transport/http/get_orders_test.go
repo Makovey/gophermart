@@ -16,7 +16,6 @@ import (
 	"github.com/Makovey/gophermart/internal/logger/dummy"
 	"github.com/Makovey/gophermart/internal/middleware"
 	repoModel "github.com/Makovey/gophermart/internal/repository/model"
-	"github.com/Makovey/gophermart/internal/service/gophermart"
 	"github.com/Makovey/gophermart/internal/service/mocks"
 	"github.com/Makovey/gophermart/internal/transport/http/model"
 )
@@ -52,7 +51,7 @@ func TestGetOrdersHandler(t *testing.T) {
 				orders:        generateModels(2),
 			},
 			params: params{
-				authToken: uuid.NewString()[:gophermart.UserIDLength],
+				authToken: uuid.NewString(),
 			},
 		},
 		{
@@ -65,7 +64,7 @@ func TestGetOrdersHandler(t *testing.T) {
 				orders:        generateModels(0),
 			},
 			params: params{
-				authToken: uuid.NewString()[:gophermart.UserIDLength],
+				authToken: uuid.NewString(),
 			},
 		},
 		{
@@ -89,7 +88,7 @@ func TestGetOrdersHandler(t *testing.T) {
 				orders:        generateModels(0),
 			},
 			params: params{
-				authToken: uuid.NewString()[:gophermart.UserIDLength],
+				authToken: uuid.NewString(),
 			},
 		},
 	}

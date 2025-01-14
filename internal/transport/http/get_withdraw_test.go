@@ -15,7 +15,6 @@ import (
 
 	"github.com/Makovey/gophermart/internal/logger/dummy"
 	"github.com/Makovey/gophermart/internal/middleware"
-	"github.com/Makovey/gophermart/internal/service/gophermart"
 	"github.com/Makovey/gophermart/internal/service/mocks"
 	"github.com/Makovey/gophermart/internal/transport/http/model"
 	"github.com/Makovey/gophermart/internal/types"
@@ -63,7 +62,7 @@ func TestGetWithdrawsHistoryHandler(t *testing.T) {
 				},
 			},
 			params: params{
-				authToken: uuid.NewString()[:gophermart.UserIDLength],
+				authToken: uuid.NewString(),
 			},
 		},
 		{
@@ -75,7 +74,7 @@ func TestGetWithdrawsHistoryHandler(t *testing.T) {
 				withdrawServiceCall: true,
 			},
 			params: params{
-				authToken: uuid.NewString()[:gophermart.UserIDLength],
+				authToken: uuid.NewString(),
 			},
 		},
 		{
@@ -96,7 +95,7 @@ func TestGetWithdrawsHistoryHandler(t *testing.T) {
 				serviceErr:          errors.New("service error"),
 			},
 			params: params{
-				authToken: uuid.NewString()[:gophermart.UserIDLength],
+				authToken: uuid.NewString(),
 			},
 		},
 	}
