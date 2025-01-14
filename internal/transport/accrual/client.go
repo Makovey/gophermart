@@ -141,8 +141,6 @@ func (c *HTTPClient) UpdateOrderStatus(ctx context.Context, orderID string) (mod
 		return model.OrderStatus{}, err
 	}
 
-	req.Header.Set("Content-Type", "plain/text")
-
 	resp, err := c.http.Do(req)
 	if err != nil {
 		c.log.Error(fmt.Sprintf("%s: can't do request", fn), "error", err.Error())

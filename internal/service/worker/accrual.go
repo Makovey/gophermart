@@ -20,7 +20,6 @@ type worker struct {
 	client      transport.Accrual
 	ticker      *time.Ticker
 	log         logger.Logger
-	quit        chan bool
 }
 
 func NewWorker(
@@ -34,7 +33,6 @@ func NewWorker(
 		client:      client,
 		ticker:      time.NewTicker(time.Second * 1),
 		log:         log,
-		quit:        make(chan bool),
 	}
 }
 
@@ -44,13 +42,12 @@ func (w *worker) ProcessNewOrders() {
 
 	orders := make(chan repoModel.Order, 5)
 	w.registerNewGoods(ctx)
-	w.runFetchingProcess(ctx, cancel, orders)
+	w.runFetchingProcess(ctx, orders)
 	w.runUpdatingProcess(ctx, orders)
 }
 
 func (w *worker) runFetchingProcess(
 	ctx context.Context,
-	cancel context.CancelFunc,
 	orders chan<- repoModel.Order,
 ) {
 	fn := "worker.runFetchingProcess"
@@ -63,8 +60,7 @@ func (w *worker) runFetchingProcess(
 				if err != nil {
 					w.log.Error(fmt.Sprintf("%s: failed to fetch new orders", fn))
 				}
-			case <-w.quit:
-				cancel()
+			case <-ctx.Done():
 				close(orders)
 				return
 			}
@@ -83,35 +79,53 @@ func (w *worker) registerNewGoods(ctx context.Context) {
 func (w *worker) runUpdatingProcess(ctx context.Context, orders <-chan repoModel.Order) {
 	fn := "worker.runUpdatingProcess"
 
-	for order := range orders {
-		if err := w.client.RegisterNewOrder(ctx, order.OrderID); err != nil {
-			w.log.Error(fmt.Sprintf("%s: failed to register new order", fn), "error", err.Error())
-		}
+	for {
+		select {
+		case <-ctx.Done():
+			w.log.Debug(fmt.Sprintf("%s: stopping updating process, context is closed", fn))
+			return
+		case order, ok := <-orders:
+			if !ok {
+				w.log.Debug(fmt.Sprintf("%s: stopping updating process, channel is closed", fn))
+				return
+			}
+			w.client.RegisterNewOrder(ctx, order.OrderID)
 
-		res, err := w.client.UpdateOrderStatus(ctx, order.OrderID)
-		if err == nil {
-			w.updateOrderInfo(ctx, res, order.OwnerUserID)
-			continue
-		}
+			res, err := w.client.UpdateOrderStatus(ctx, order.OrderID)
+			if err == nil {
+				w.updateOrderInfo(ctx, res, order.OwnerUserID)
+				continue
+			}
 
-		var manyReqErr *accrual.ManyRequestError
-		switch {
-		case errors.As(err, &manyReqErr):
-			time.AfterFunc(manyReqErr.RetryAfter+time.Second, func() {
-				retryRes, retryErr := w.client.UpdateOrderStatus(ctx, order.OrderID)
-				if retryErr != nil {
-					w.log.Error(fmt.Sprintf("%s: retried methods is failed", fn), "error", retryErr)
-				}
-				w.updateOrderInfo(ctx, retryRes, order.OwnerUserID)
-			})
-		default:
-			w.log.Error(fmt.Sprintf("%s: failed to update order status", fn), "error", err)
+			var manyReqErr *accrual.ManyRequestError
+			switch {
+			case errors.As(err, &manyReqErr):
+				go func(order repoModel.Order, retryAfter time.Duration) {
+					select {
+					case <-ctx.Done():
+						w.log.Info(fmt.Sprintf("%s: context cancelled before retrying order %s", fn, order.OrderID))
+						return
+					case <-time.After(retryAfter + time.Second):
+						retryRes, retryErr := w.client.UpdateOrderStatus(ctx, order.OrderID)
+						if retryErr != nil {
+							w.log.Error(fmt.Sprintf("%s: retried methods is failed", fn), "error", retryErr)
+						}
+						w.updateOrderInfo(ctx, retryRes, order.OwnerUserID)
+					}
+				}(order, manyReqErr.RetryAfter)
+			default:
+				w.log.Error(fmt.Sprintf("%s: failed to update order status", fn), "error", err)
+			}
 		}
 	}
 }
 
 func (w *worker) updateOrderInfo(ctx context.Context, status model.OrderStatus, userID string) {
 	fn := "worker.updateOrderInfo"
+	if ctx.Err() != nil {
+		w.log.Error(fmt.Sprintf("%s: can't update order info", fn), "error", ctx.Err().Error())
+		return
+	}
 
 	err := w.orderRepo.UpdateOrder(ctx, repoModel.OrderStatus{OrderID: status.OrderID, Status: status.Status, Accrual: status.Accrual})
 	if err != nil {
@@ -126,6 +140,4 @@ func (w *worker) updateOrderInfo(ctx context.Context, status model.OrderStatus, 
 
 func (w *worker) DownProcess() {
 	w.ticker.Stop()
-	w.quit <- true
-	close(w.quit)
 }
