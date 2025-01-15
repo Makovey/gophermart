@@ -11,7 +11,6 @@ import (
 
 	"github.com/Makovey/gophermart/internal/repository/mocks"
 	repoModel "github.com/Makovey/gophermart/internal/repository/model"
-	servMock "github.com/Makovey/gophermart/internal/service/mocks"
 )
 
 func TestGetUsersWithdrawHistory(t *testing.T) {
@@ -59,12 +58,7 @@ func TestGetUsersWithdrawHistory(t *testing.T) {
 			mock := mocks.NewMockHistoryServiceRepository(ctrl)
 			mock.EXPECT().GetUsersHistory(gomock.Any(), gomock.Any()).Return(tt.expects.repoResult, tt.expects.repoError)
 
-			serv := NewGophermartService(
-				servMock.NewMockUserService(ctrl),
-				servMock.NewMockOrderService(ctrl),
-				servMock.NewMockBalanceService(ctrl),
-				NewHistoryService(mock),
-			)
+			serv := NewHistoryService(mock)
 			models, _ := serv.GetUsersWithdrawHistory(context.Background(), "1")
 
 			assert.Equal(t, tt.want.resultLen, len(models))

@@ -4,8 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"time"
-
 	"github.com/jackc/pgx/v5"
 
 	"github.com/Makovey/gophermart/internal/repository/model"
@@ -38,11 +36,10 @@ func (r *Repo) PostNewOrder(ctx context.Context, orderID, status, userID string)
 
 	_, err := r.pool.Exec(
 		ctx,
-		`INSERT INTO gophermart_orders (order_id, owner_user_id, status, created_at) VALUES ($1, $2, $3, $4)`,
+		`INSERT INTO gophermart_orders (order_id, owner_user_id, status) VALUES ($1, $2, $3)`,
 		orderID,
 		userID,
 		status,
-		time.Now(),
 	)
 	if err != nil {
 		return fmt.Errorf("[%s] failed to insert user : %w", fn, service.ErrExecStmt)

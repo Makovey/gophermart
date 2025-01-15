@@ -22,7 +22,7 @@ func (r *Repo) IncreaseUsersBalance(ctx context.Context, userID string, reward d
 		DO UPDATE SET accrual = gophermart_balances.accrual + excluded.accrual, updated_at = $3`,
 		userID,
 		reward,
-		time.Now(),
+		time.Now().UTC(),
 	)
 	if err != nil {
 		return fmt.Errorf("[%s] failed to update users balance: %w", fn, service.ErrExecStmt)

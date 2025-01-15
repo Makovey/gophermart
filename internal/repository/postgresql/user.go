@@ -4,8 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"time"
-
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 
@@ -22,11 +20,10 @@ func (r *Repo) RegisterNewUser(ctx context.Context, user model.RegisterUser) err
 
 	_, err := r.pool.Exec(
 		ctx,
-		`INSERT INTO gophermart_users (user_id, login, password_hash, created_at) VALUES ($1, $2, $3, $4)`,
+		`INSERT INTO gophermart_users (user_id, login, password_hash) VALUES ($1, $2, $3)`,
 		user.UserID,
 		user.Login,
 		user.PasswordHash,
-		time.Now(),
 	)
 	if err != nil {
 		r.log.Error(fmt.Sprintf("[%s] failed to execute new user", fn), "error", err)

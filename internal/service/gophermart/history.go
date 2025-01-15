@@ -3,14 +3,13 @@ package gophermart
 import (
 	"context"
 	"fmt"
-	"github.com/Makovey/gophermart/internal/transport/http"
 
 	repoModel "github.com/Makovey/gophermart/internal/repository/model"
-	"github.com/Makovey/gophermart/internal/service/adapter"
+	"github.com/Makovey/gophermart/internal/transport/http"
 	"github.com/Makovey/gophermart/internal/transport/http/model"
 )
 
-//go:generate mockgen -source=history_service.go -destination=../../repository/mocks/history_mock.go -package=mocks
+//go:generate mockgen -source=history.go -destination=../../repository/mocks/history_mock.go -package=mocks
 type HistoryServiceRepository interface {
 	GetUsersHistory(ctx context.Context, userID string) ([]repoModel.Withdraw, error)
 }
@@ -35,5 +34,5 @@ func (h *historyService) GetUsersWithdrawHistory(ctx context.Context, userID str
 		return nil, fmt.Errorf("[%s]: %w", fn, err)
 	}
 
-	return adapter.FromRepoToHistoryWithdraws(history), nil
+	return FromRepoToHistoryWithdraws(history), nil
 }

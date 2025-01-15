@@ -134,7 +134,7 @@ func TestRegisterHandler(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			serv := mocks.NewMockGophermartService(ctrl)
+			serv := mocks.NewMockUserService(ctrl)
 			if tt.expects.expectServiceCall {
 				serv.EXPECT().RegisterNewUser(gomock.Any(), gomock.Any()).Return(uuid.NewString(), tt.expects.serviceError)
 			}
@@ -142,6 +142,9 @@ func TestRegisterHandler(t *testing.T) {
 			h := NewHTTPHandler(
 				dummy.NewDummyLogger(),
 				serv,
+				mocks.NewMockOrderService(ctrl),
+				mocks.NewMockBalanceService(ctrl),
+				mocks.NewMockHistoryService(ctrl),
 			)
 
 			w := httptest.NewRecorder()

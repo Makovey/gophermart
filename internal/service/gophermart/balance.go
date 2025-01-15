@@ -9,24 +9,23 @@ import (
 
 	repoModel "github.com/Makovey/gophermart/internal/repository/model"
 	"github.com/Makovey/gophermart/internal/service"
-	"github.com/Makovey/gophermart/internal/service/adapter"
 	"github.com/Makovey/gophermart/internal/transport/http"
 	"github.com/Makovey/gophermart/internal/transport/http/model"
 )
 
-//go:generate mockgen -source=balance_service.go -destination=../../repository/mocks/balance_mock.go -package=mocks
-type BalancesServiceRepository interface {
+//go:generate mockgen -source=balance.go -destination=../../repository/mocks/balance_mock.go -package=mocks
+type BalancesRepository interface {
 	DecreaseUsersBalance(ctx context.Context, userID string, withdraw decimal.Decimal) error
 	GetUsersBalance(ctx context.Context, userID string) (repoModel.Balance, error)
 	RecordUsersWithdraw(ctx context.Context, userID, orderID string, amount decimal.Decimal) error
 }
 
 type balanceService struct {
-	balanceRepo BalancesServiceRepository
+	balanceRepo BalancesRepository
 }
 
 func NewBalanceService(
-	balanceRepo BalancesServiceRepository,
+	balanceRepo BalancesRepository,
 ) http.BalanceService {
 	return &balanceService{
 		balanceRepo: balanceRepo,
@@ -40,13 +39,13 @@ func (b *balanceService) GetUsersBalance(ctx context.Context, userID string) (mo
 	if err != nil {
 		switch {
 		case errors.Is(err, service.ErrNotFound):
-			return adapter.FromRepoToBalance(repoModel.Balance{}), nil
+			return FromRepoToBalance(repoModel.Balance{}), nil
 		default:
-			return adapter.FromRepoToBalance(repoModel.Balance{}), fmt.Errorf("[%s]: %w", fn, err)
+			return FromRepoToBalance(repoModel.Balance{}), fmt.Errorf("[%s]: %w", fn, err)
 		}
 	}
 
-	return adapter.FromRepoToBalance(balance), nil
+	return FromRepoToBalance(balance), nil
 }
 
 func (b *balanceService) WithdrawUsersBalance(ctx context.Context, userID string, withdrawModel model.WithdrawRequest) error {

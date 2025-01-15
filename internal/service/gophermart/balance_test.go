@@ -12,7 +12,6 @@ import (
 	repoMock "github.com/Makovey/gophermart/internal/repository/mocks"
 	repoModel "github.com/Makovey/gophermart/internal/repository/model"
 	"github.com/Makovey/gophermart/internal/service"
-	servMock "github.com/Makovey/gophermart/internal/service/mocks"
 	"github.com/Makovey/gophermart/internal/transport/http/model"
 	"github.com/Makovey/gophermart/internal/types"
 )
@@ -58,15 +57,10 @@ func TestBalanceServiceGetUsersBalance(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			mock := repoMock.NewMockBalancesServiceRepository(ctrl)
+			mock := repoMock.NewMockBalancesRepository(ctrl)
 			mock.EXPECT().GetUsersBalance(gomock.Any(), gomock.Any()).Return(tt.expects.repoResult, tt.expects.repoError)
 
-			serv := NewGophermartService(
-				servMock.NewMockUserService(ctrl),
-				servMock.NewMockOrderService(ctrl),
-				NewBalanceService(mock),
-				servMock.NewMockHistoryService(ctrl),
-			)
+			serv := NewBalanceService(mock)
 			mod, _ := serv.GetUsersBalance(context.Background(), "1")
 
 			assert.Equal(t, mod, tt.want.balance)
@@ -163,7 +157,7 @@ func TestWithdrawUsersBalance(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			balanceRepoMock := repoMock.NewMockBalancesServiceRepository(ctrl)
+			balanceRepoMock := repoMock.NewMockBalancesRepository(ctrl)
 			// выключено, потому что тесты не учли этот кейс
 			//mock.EXPECT().GetOrderByID(gomock.Any(), gomock.Any()).Return(tt.repoResult.getOrderResponse, tt.repoResult.getOrderErr)
 			if tt.expects.getUsersBalance {
@@ -178,12 +172,7 @@ func TestWithdrawUsersBalance(t *testing.T) {
 				balanceRepoMock.EXPECT().RecordUsersWithdraw(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(tt.repoResult.recordHistoryErr)
 			}
 
-			serv := NewGophermartService(
-				servMock.NewMockUserService(ctrl),
-				servMock.NewMockOrderService(ctrl),
-				NewBalanceService(balanceRepoMock),
-				servMock.NewMockHistoryService(ctrl),
-			)
+			serv := NewBalanceService(balanceRepoMock)
 			err := serv.WithdrawUsersBalance(context.Background(), tt.args.userID, tt.args.request)
 			if err != nil {
 				assert.ErrorContains(t, err, tt.want.serviceError.Error())

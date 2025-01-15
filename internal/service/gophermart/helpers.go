@@ -1,4 +1,4 @@
-package adapter
+package gophermart
 
 import (
 	"time"
@@ -7,6 +7,13 @@ import (
 	"github.com/Makovey/gophermart/internal/transport/http/model"
 	"github.com/Makovey/gophermart/internal/types"
 )
+
+func FromRepoToBalance(balance repo.Balance) model.BalanceResponse {
+	return model.BalanceResponse{
+		Current:   types.FloatDecimal(balance.Accrual),
+		Withdrawn: types.FloatDecimal(balance.Withdrawn),
+	}
+}
 
 func FromRepoToOrders(repoOrders []repo.Order) []model.OrderResponse {
 	var orders []model.OrderResponse
@@ -29,5 +36,22 @@ func fromRepoToOrder(repoOrder repo.Order) model.OrderResponse {
 		Status:     repoOrder.Status,
 		Accrual:    accrual,
 		UploadedAt: repoOrder.CreatedAt.Format(time.RFC3339),
+	}
+}
+
+func FromRepoToHistoryWithdraws(repoWithdraws []repo.Withdraw) []model.WithdrawHistoryResponse {
+	var withdraws []model.WithdrawHistoryResponse
+	for _, repoWithdraw := range repoWithdraws {
+		withdraws = append(withdraws, fromRepoToHistoryWithdraw(repoWithdraw))
+	}
+
+	return withdraws
+}
+
+func fromRepoToHistoryWithdraw(repoWithdraw repo.Withdraw) model.WithdrawHistoryResponse {
+	return model.WithdrawHistoryResponse{
+		Order:       repoWithdraw.OrderID,
+		Sum:         types.FloatDecimal(repoWithdraw.Withdraw),
+		ProcessedAt: repoWithdraw.CreatedAt,
 	}
 }

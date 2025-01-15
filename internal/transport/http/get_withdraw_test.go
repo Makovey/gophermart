@@ -104,7 +104,7 @@ func TestGetWithdrawsHistoryHandler(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			serv := mocks.NewMockGophermartService(ctrl)
+			serv := mocks.NewMockHistoryService(ctrl)
 
 			if tt.expects.withdrawServiceCall {
 				serv.EXPECT().GetUsersWithdrawHistory(gomock.Any(), gomock.Any()).Return(tt.expects.serviceResp, tt.expects.serviceErr)
@@ -112,6 +112,9 @@ func TestGetWithdrawsHistoryHandler(t *testing.T) {
 
 			h := NewHTTPHandler(
 				dummy.NewDummyLogger(),
+				mocks.NewMockUserService(ctrl),
+				mocks.NewMockOrderService(ctrl),
+				mocks.NewMockBalanceService(ctrl),
 				serv,
 			)
 

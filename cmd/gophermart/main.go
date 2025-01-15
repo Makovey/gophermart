@@ -26,18 +26,17 @@ func main() {
 		os.Exit(1)
 	}
 
-	serv := gophermart.NewGophermartService(
-		gophermart.NewUserService(repo, jwt),
-		gophermart.NewOrderService(repo),
-		gophermart.NewBalanceService(repo),
-		gophermart.NewHistoryService(repo),
-	)
-
 	appl := app.NewApp(
 		log,
 		cfg,
 		worker.NewWorker(repo, accrual.NewHTTPClient(cfg, log), cfg, log),
-		http.NewHTTPHandler(log, serv),
+		http.NewHTTPHandler(
+			log,
+			gophermart.NewUserService(repo, jwt),
+			gophermart.NewOrderService(repo),
+			gophermart.NewBalanceService(repo),
+			gophermart.NewHistoryService(repo),
+		),
 		middleware.NewAuth(jwt, log),
 	)
 

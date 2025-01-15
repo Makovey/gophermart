@@ -3,7 +3,6 @@ package postgresql
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/Makovey/gophermart/internal/repository/model"
 	"github.com/Makovey/gophermart/internal/service"
@@ -15,11 +14,10 @@ func (r *Repo) RecordUsersWithdraw(ctx context.Context, userID, orderID string, 
 
 	_, err := r.pool.Exec(
 		ctx,
-		`INSERT INTO gophermart_history (owner_user_id, order_id, withdraw, created_at) VALUES ($1, $2, $3, $4)`,
+		`INSERT INTO gophermart_history (owner_user_id, order_id, withdraw) VALUES ($1, $2, $3)`,
 		userID,
 		orderID,
 		amount,
-		time.Now(),
 	)
 	if err != nil {
 		return fmt.Errorf("[%s] failed to post history stamp: %w", fn, service.ErrExecStmt)

@@ -19,14 +19,14 @@ import (
 )
 
 //go:generate mockgen -source=accrual.go -destination=../../repository/mocks/worker_mock.go -package=mocks
-type WorkerRepository interface {
+type OrderRepository interface {
 	FetchNewOrdersToChan(ctx context.Context, ordersCh chan<- repoModel.Order, newStatus, inProgressStatus string) error
 	UpdateOrder(ctx context.Context, status repoModel.OrderStatus) error
 	IncreaseUsersBalance(ctx context.Context, userID string, reward decimal.Decimal) error
 }
 
 type worker struct {
-	repo   WorkerRepository
+	repo   OrderRepository
 	client transport.Accrual
 	ticker *time.Ticker
 	log    logger.Logger
@@ -35,7 +35,7 @@ type worker struct {
 }
 
 func NewWorker(
-	repo WorkerRepository,
+	repo OrderRepository,
 	client transport.Accrual,
 	cfg config.Config,
 	log logger.Logger,

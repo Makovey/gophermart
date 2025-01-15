@@ -159,14 +159,17 @@ func TestPostWithdrawHandler(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			serv := mocks.NewMockGophermartService(ctrl)
+			serv := mocks.NewMockBalanceService(ctrl)
 			if tt.expects.serviceCall {
 				serv.EXPECT().WithdrawUsersBalance(gomock.Any(), gomock.Any(), gomock.Any()).Return(tt.expects.serviceErr)
 			}
 
 			h := NewHTTPHandler(
 				dummy.NewDummyLogger(),
+				mocks.NewMockUserService(ctrl),
+				mocks.NewMockOrderService(ctrl),
 				serv,
+				mocks.NewMockHistoryService(ctrl),
 			)
 
 			w := httptest.NewRecorder()

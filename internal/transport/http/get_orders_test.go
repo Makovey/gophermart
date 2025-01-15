@@ -97,7 +97,7 @@ func TestGetOrdersHandler(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			serv := mocks.NewMockGophermartService(ctrl)
+			serv := mocks.NewMockOrderService(ctrl)
 
 			if tt.expects.getOrdersCall {
 				serv.EXPECT().GetOrders(gomock.Any(), gomock.Any()).Return(tt.expects.orders, tt.expects.ordersErr)
@@ -105,7 +105,10 @@ func TestGetOrdersHandler(t *testing.T) {
 
 			h := NewHTTPHandler(
 				dummy.NewDummyLogger(),
+				mocks.NewMockUserService(ctrl),
 				serv,
+				mocks.NewMockBalanceService(ctrl),
+				mocks.NewMockHistoryService(ctrl),
 			)
 
 			w := httptest.NewRecorder()

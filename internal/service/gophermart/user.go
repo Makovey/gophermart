@@ -3,18 +3,18 @@ package gophermart
 import (
 	"context"
 	"fmt"
-	"github.com/Makovey/gophermart/internal/transport/http"
 
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 
 	repoModel "github.com/Makovey/gophermart/internal/repository/model"
 	"github.com/Makovey/gophermart/internal/service"
+	"github.com/Makovey/gophermart/internal/transport/http"
 	"github.com/Makovey/gophermart/internal/transport/http/model"
 	"github.com/Makovey/gophermart/pkg/jwt"
 )
 
-//go:generate mockgen -source=user_service.go -destination=../../repository/mocks/user_mock.go -package=mocks
+//go:generate mockgen -source=user.go -destination=../../repository/mocks/user_mock.go -package=mocks
 type UserServiceRepository interface {
 	RegisterNewUser(ctx context.Context, user repoModel.RegisterUser) error
 	LoginUser(ctx context.Context, login string) (repoModel.RegisterUser, error)

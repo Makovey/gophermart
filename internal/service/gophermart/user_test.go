@@ -13,7 +13,6 @@ import (
 	"github.com/Makovey/gophermart/internal/logger/dummy"
 	"github.com/Makovey/gophermart/internal/repository/mocks"
 	repoModel "github.com/Makovey/gophermart/internal/repository/model"
-	servMock "github.com/Makovey/gophermart/internal/service/mocks"
 	"github.com/Makovey/gophermart/internal/transport/http/model"
 	"github.com/Makovey/gophermart/pkg/jwt"
 )
@@ -60,12 +59,7 @@ func TestRegisterNewUser(t *testing.T) {
 				mock.EXPECT().RegisterNewUser(gomock.Any(), gomock.Any()).Return(tt.expects.repoError)
 			}
 
-			serv := NewGophermartService(
-				NewUserService(mock, jwt.NewJWT(dummy.NewDummyLogger())),
-				servMock.NewMockOrderService(ctrl),
-				servMock.NewMockBalanceService(ctrl),
-				servMock.NewMockHistoryService(ctrl),
-			)
+			serv := NewUserService(mock, jwt.NewJWT(dummy.NewDummyLogger()))
 			token, err := serv.RegisterNewUser(context.Background(), tt.param.authModel)
 
 			if err != nil {
@@ -120,12 +114,7 @@ func TestLoginUser(t *testing.T) {
 			mock := mocks.NewMockUserServiceRepository(ctrl)
 			mock.EXPECT().LoginUser(gomock.Any(), tt.param.authModel.Login).Return(tt.expects.repoAnswer, tt.expects.repoError)
 
-			serv := NewGophermartService(
-				NewUserService(mock, jwt.NewJWT(dummy.NewDummyLogger())),
-				servMock.NewMockOrderService(ctrl),
-				servMock.NewMockBalanceService(ctrl),
-				servMock.NewMockHistoryService(ctrl),
-			)
+			serv := NewUserService(mock, jwt.NewJWT(dummy.NewDummyLogger()))
 			token, err := serv.LoginUser(context.Background(), tt.param.authModel)
 
 			if err != nil {

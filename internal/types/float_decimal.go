@@ -11,7 +11,7 @@ type FloatDecimal decimal.Decimal
 
 func (f FloatDecimal) MarshalJSON() ([]byte, error) {
 	dec := decimal.Decimal(f)
-	floatVal, _ := dec.Float64()
+	floatVal := dec.InexactFloat64()
 	return json.Marshal(floatVal)
 }
 

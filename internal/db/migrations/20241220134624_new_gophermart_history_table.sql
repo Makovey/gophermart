@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS gophermart_history (
    owner_user_id varchar(100) REFERENCES gophermart_users(user_id),
    order_id varchar(100),
    withdraw DECIMAL,
-   created_at TIMESTAMP NOT NULL
+   created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC') NOT NULL
 );
 -- +goose StatementEnd
 

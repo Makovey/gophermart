@@ -77,7 +77,7 @@ func TestGetBalanceHandler(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			serv := mocks.NewMockGophermartService(ctrl)
+			serv := mocks.NewMockBalanceService(ctrl)
 
 			if tt.expects.getBalanceCall {
 				serv.EXPECT().GetUsersBalance(gomock.Any(), gomock.Any()).Return(tt.expects.balanceRes, tt.expects.balanceErr)
@@ -85,7 +85,10 @@ func TestGetBalanceHandler(t *testing.T) {
 
 			h := NewHTTPHandler(
 				dummy.NewDummyLogger(),
+				mocks.NewMockUserService(ctrl),
+				mocks.NewMockOrderService(ctrl),
 				serv,
+				mocks.NewMockHistoryService(ctrl),
 			)
 
 			w := httptest.NewRecorder()

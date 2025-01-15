@@ -12,7 +12,6 @@ import (
 	"github.com/Makovey/gophermart/internal/repository/mocks"
 	repoModel "github.com/Makovey/gophermart/internal/repository/model"
 	"github.com/Makovey/gophermart/internal/service"
-	servMock "github.com/Makovey/gophermart/internal/service/mocks"
 	"github.com/golang/mock/gomock"
 	"github.com/shopspring/decimal"
 )
@@ -55,12 +54,7 @@ func TestValidateOrderID(t *testing.T) {
 
 			mock := mocks.NewMockOrderServiceRepository(ctrl)
 
-			serv := NewGophermartService(
-				servMock.NewMockUserService(ctrl),
-				NewOrderService(mock),
-				servMock.NewMockBalanceService(ctrl),
-				servMock.NewMockHistoryService(ctrl),
-			)
+			serv := NewOrderService(mock)
 
 			isValid := serv.ValidateOrderID(tt.params.orderID)
 
@@ -134,12 +128,7 @@ func TestProcessNewOrder(t *testing.T) {
 				mock.EXPECT().PostNewOrder(gomock.Any(), tt.param.orderID, "NEW", tt.param.userID).Return(tt.expects.postError)
 			}
 
-			serv := NewGophermartService(
-				servMock.NewMockUserService(ctrl),
-				NewOrderService(mock),
-				servMock.NewMockBalanceService(ctrl),
-				servMock.NewMockHistoryService(ctrl),
-			)
+			serv := NewOrderService(mock)
 			err := serv.ProcessNewOrder(context.Background(), tt.param.userID, tt.param.orderID)
 
 			if tt.want.finalErr != nil {
@@ -194,12 +183,7 @@ func TestGetOrders(t *testing.T) {
 			mock := mocks.NewMockOrderServiceRepository(ctrl)
 			mock.EXPECT().GetOrders(gomock.Any(), tt.param.userID).Return(tt.expects.repoResult, tt.expects.repoError)
 
-			serv := NewGophermartService(
-				servMock.NewMockUserService(ctrl),
-				NewOrderService(mock),
-				servMock.NewMockBalanceService(ctrl),
-				servMock.NewMockHistoryService(ctrl),
-			)
+			serv := NewOrderService(mock)
 			models, err := serv.GetOrders(context.Background(), tt.param.userID)
 
 			if tt.want.err {

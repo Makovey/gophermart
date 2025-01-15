@@ -155,7 +155,7 @@ func TestPostOrderHandler(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			serv := mocks.NewMockGophermartService(ctrl)
+			serv := mocks.NewMockOrderService(ctrl)
 			if tt.expects.validateCall {
 				serv.EXPECT().ValidateOrderID(gomock.Any()).Return(tt.expects.isBodyValid)
 			}
@@ -166,7 +166,10 @@ func TestPostOrderHandler(t *testing.T) {
 
 			h := NewHTTPHandler(
 				dummy.NewDummyLogger(),
+				mocks.NewMockUserService(ctrl),
 				serv,
+				mocks.NewMockBalanceService(ctrl),
+				mocks.NewMockHistoryService(ctrl),
 			)
 
 			w := httptest.NewRecorder()

@@ -8,13 +8,12 @@ import (
 
 	repoModel "github.com/Makovey/gophermart/internal/repository/model"
 	"github.com/Makovey/gophermart/internal/service"
-	"github.com/Makovey/gophermart/internal/service/adapter"
 	"github.com/Makovey/gophermart/internal/service/luhn"
 	"github.com/Makovey/gophermart/internal/transport/http"
 	"github.com/Makovey/gophermart/internal/transport/http/model"
 )
 
-//go:generate mockgen -source=order_service.go -destination=../../repository/mocks/order_mock.go -package=mocks
+//go:generate mockgen -source=order.go -destination=../../repository/mocks/order_mock.go -package=mocks
 type OrderServiceRepository interface {
 	GetOrderByID(ctx context.Context, orderID string) (repoModel.Order, error)
 	GetOrders(ctx context.Context, userID string) ([]repoModel.Order, error)
@@ -70,5 +69,5 @@ func (o *orderService) GetOrders(ctx context.Context, userID string) ([]model.Or
 		return nil, fmt.Errorf("[%s]: %w", fn, err)
 	}
 
-	return adapter.FromRepoToOrders(repoOrders), nil
+	return FromRepoToOrders(repoOrders), nil
 }
